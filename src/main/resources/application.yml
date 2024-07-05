@@ -1,0 +1,19 @@
+spring:
+  application:
+    name:
+      reactive-practice
+
+  r2dbc:
+    url: r2dbc:h2:mem:///testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+
+h2:
+  console:
+    port: 8090
+
+logging:
+  level:
+    org.springframework:
+      r2dbc: debug
+debug: true

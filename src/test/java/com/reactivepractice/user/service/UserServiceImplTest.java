@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -59,6 +58,15 @@ class UserServiceImplTest {
                     assertThat(u.getEmail()).isEqualTo("test@test.test");
                     assertThat(u.getPassword()).isEqualTo("test");
                 })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("이메일 조회 정보 없음")
+    void findByEmailWhenNotFound(){
+        Mono<User> user = userService.findByEmail("test2@test.test");
+        StepVerifier.create(user)
+                .expectNextCount(0)
                 .verifyComplete();
     }
 

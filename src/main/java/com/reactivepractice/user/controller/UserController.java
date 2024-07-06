@@ -1,14 +1,11 @@
 package com.reactivepractice.user.controller;
 
+import com.reactivepractice.user.controller.port.UserService;
 import com.reactivepractice.user.domain.User;
-import com.reactivepractice.user.service.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -16,13 +13,18 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final UserServiceImpl userService;
+    private final UserService userService;
 
     @PostMapping("")
-    public ResponseEntity<Mono<User>> register(@RequestBody User user){
-        Mono<User> result = userService.register(user);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(result);
+    public Mono<ResponseEntity<User>> register(@RequestBody User user){
+        return userService.register(user)
+                .map(u -> ResponseEntity.status(HttpStatus.CREATED).body(u));
+    }
+
+    @GetMapping("/{email}")
+    public Mono<ResponseEntity<User>> register(@PathVariable(name = "email") String email){
+        return userService.findByEmail(email)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 }

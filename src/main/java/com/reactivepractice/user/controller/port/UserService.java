@@ -1,10 +1,13 @@
 package com.reactivepractice.user.controller.port;
 
-import com.reactivepractice.user.domain.User;
+import com.reactivepractice.user.controller.response.UserResponse;
+import com.reactivepractice.user.domain.UserRequest;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface UserService {
-    Mono<User> register(User user);
+    Mono<UserResponse> register(UserRequest request);
 
-    Mono<User> findByEmail(String email);
+    Mono<UserResponse> findByEmail(String email);
+
 }

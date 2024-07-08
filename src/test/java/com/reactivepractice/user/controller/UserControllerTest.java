@@ -1,7 +1,9 @@
 package com.reactivepractice.user.controller;
 
 import com.reactivepractice.mock.TestContainer;
+import com.reactivepractice.user.controller.response.UserResponse;
 import com.reactivepractice.user.domain.User;
+import com.reactivepractice.user.domain.UserRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,8 +13,9 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 @Slf4j
 class UserControllerTest {
@@ -23,13 +26,13 @@ class UserControllerTest {
         // given
         TestContainer testContainer = TestContainer.builder()
                 .build();
-        User user = User.builder()
+        UserRequest request = UserRequest.builder()
                 .email("test@test.test")
                 .password("test")
                 .build();
 
         // when
-        Mono<ResponseEntity<User>> result = testContainer.userController.register(Mono.just(user));
+        Mono<ResponseEntity<UserResponse>> result = testContainer.userController.register(Mono.just(request));
 
         // then
         StepVerifier.create(result)
@@ -38,7 +41,6 @@ class UserControllerTest {
                     assertThat(response.getBody()).isNotNull();
                     assertThat(response.getBody().getId()).isEqualTo(1);
                     assertThat(response.getBody().getEmail()).isEqualTo("test@test.test");
-                    assertThat(response.getBody().getPassword()).isEqualTo("test");
                 })
                 .verifyComplete();
     }
@@ -49,14 +51,14 @@ class UserControllerTest {
         // given
         TestContainer testContainer = TestContainer.builder()
                 .build();
-        User user = User.builder()
+        UserRequest user = UserRequest.builder()
                 .email("test@test.test")
                 .password("test")
                 .build();
-        testContainer.userRepository.save(user);
+        testContainer.userRepository.save(User.from(user));
 
         // when
-        Mono<ResponseEntity<User>> result = testContainer.userController.register(Mono.just(user));
+        Mono<ResponseEntity<UserResponse>> result = testContainer.userController.register(Mono.just(user));
 
         // then
         StepVerifier.create(result)
@@ -72,14 +74,14 @@ class UserControllerTest {
         // given
         TestContainer testContainer = TestContainer.builder()
                 .build();
-        testContainer.userRepository.save(User.builder()
+        testContainer.userRepository.save(User.from(UserRequest.builder()
                 .email("test@test.test")
                 .password("test")
-                .build());
+                .build()));
         String email = "test@test.test";
 
         // when
-        Mono<ResponseEntity<User>> result = testContainer.userController.getUserByEmail(Mono.just(email));
+        Mono<ResponseEntity<UserResponse>> result = testContainer.userController.getUserByEmail(email);
 
         // then
         StepVerifier.create(result)
@@ -88,7 +90,6 @@ class UserControllerTest {
                     assertThat(response.getBody()).isNotNull();
                     assertThat(response.getBody().getId()).isEqualTo(1);
                     assertThat(response.getBody().getEmail()).isEqualTo("test@test.test");
-                    assertThat(response.getBody().getPassword()).isEqualTo("test");
                 })
                 .verifyComplete();
     }
@@ -102,7 +103,7 @@ class UserControllerTest {
         String email = "test@test.test";
 
         // when
-        Mono<ResponseEntity<User>> result = testContainer.userController.getUserByEmail(Mono.just(email));
+        Mono<ResponseEntity<UserResponse>> result = testContainer.userController.getUserByEmail(email);
 
         // then
         StepVerifier.create(result)
@@ -111,5 +112,6 @@ class UserControllerTest {
                 })
                 .verifyComplete();
     }
+
 
 }

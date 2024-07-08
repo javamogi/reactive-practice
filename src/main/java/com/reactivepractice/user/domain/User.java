@@ -1,19 +1,31 @@
 package com.reactivepractice.user.domain;
 
-import lombok.*;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Table;
+import com.reactivepractice.user.infrastructure.UserEntity;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
 
-@Table("users")
 @Getter
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
-@ToString
+@AllArgsConstructor
 public class User {
-
-    @Id
     private Long id;
     private String email;
     private String password;
+
+    public static User from(UserEntity user) {
+        return User.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .password(user.getPassword())
+                .build();
+    }
+
+    public static User from(UserRequest user) {
+        return User.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .password(user.getPassword())
+                .build();
+    }
 }

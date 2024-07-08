@@ -3,12 +3,14 @@ package com.reactivepractice.user.service;
 import com.reactivepractice.mock.FakeUserRepository;
 import com.reactivepractice.user.domain.User;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.DuplicateKeyException;
+import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
-
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -34,6 +36,7 @@ class UserServiceImplTest {
     @Test
     @DisplayName("등록")
     void register(){
+        Hooks.onOperatorDebug();
         User user = User.builder()
                 .email("test2@test.test")
                 .password("test2")
@@ -46,6 +49,22 @@ class UserServiceImplTest {
                     assertThat(u.getPassword()).isEqualTo("test2");
                 })
                 .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("등록 실패 가입된 이메일")
+    void failedRegisterWhenDuplicateEmail(){
+        User user = User.builder()
+                .email("test@test.test")
+                .password("test")
+                .build();
+//        assertThrows(DuplicateKeyException.class,
+//                () -> userService.register(user));
+        Mono<User> register = userService.register(user);
+        register.subscribe(u -> log.info("user : {}", u));
+        StepVerifier.create(register)
+                .expectError(DuplicateKeyException.class)
+                .verify();
     }
 
     @Test

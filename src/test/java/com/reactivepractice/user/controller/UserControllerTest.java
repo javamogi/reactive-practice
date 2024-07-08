@@ -2,6 +2,7 @@ package com.reactivepractice.user.controller;
 
 import com.reactivepractice.mock.TestContainer;
 import com.reactivepractice.user.domain.User;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatusCode;
@@ -13,6 +14,7 @@ import reactor.test.StepVerifier;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
+@Slf4j
 class UserControllerTest {
 
     @Test
@@ -37,6 +39,29 @@ class UserControllerTest {
                     assertThat(response.getBody().getId()).isEqualTo(1);
                     assertThat(response.getBody().getEmail()).isEqualTo("test@test.test");
                     assertThat(response.getBody().getPassword()).isEqualTo("test");
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("회원가입 실패 가입된 이메일")
+    void failedRegisterWhenDuplicateEmail(){
+        // given
+        TestContainer testContainer = TestContainer.builder()
+                .build();
+        User user = User.builder()
+                .email("test@test.test")
+                .password("test")
+                .build();
+        testContainer.userRepository.save(user);
+
+        // when
+        Mono<ResponseEntity<User>> result = testContainer.userController.register(Mono.just(user));
+
+        // then
+        StepVerifier.create(result)
+                .assertNext(response -> {
+                    assertThat(response.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(409));
                 })
                 .verifyComplete();
     }

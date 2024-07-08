@@ -4,6 +4,7 @@ import com.reactivepractice.user.controller.port.UserService;
 import com.reactivepractice.user.domain.User;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,7 +21,9 @@ public class UserController {
     @PostMapping("")
     public Mono<ResponseEntity<User>> register(@RequestBody Mono<User> user){
         return user.flatMap(userService::register)
-                .map(u -> ResponseEntity.status(HttpStatus.CREATED).body(u));
+                .map(u -> ResponseEntity.status(HttpStatus.CREATED).body(u))
+                .onErrorResume(DuplicateKeyException.class,
+                        error -> Mono.just(ResponseEntity.status(HttpStatus.CONFLICT).build()));
     }
 
     @GetMapping("/{email}")

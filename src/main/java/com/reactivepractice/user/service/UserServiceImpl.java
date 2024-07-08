@@ -35,5 +35,10 @@ public class UserServiceImpl implements UserService {
                 .map(UserResponse::of);
     }
 
+    @Override
+    public Flux<UserResponse> findAll() {
+        return userRepository.findAll()
+                .map(UserResponse::of);
+    }
 
 }

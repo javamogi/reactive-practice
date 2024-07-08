@@ -47,4 +47,9 @@ public class FakeUserRepository implements UserRepository {
                 .next();
     }
 
+    @Override
+    public Flux<User> findAll() {
+        return Flux.fromIterable(data)
+                .map(UserEntity::toModel);
+    }
 }

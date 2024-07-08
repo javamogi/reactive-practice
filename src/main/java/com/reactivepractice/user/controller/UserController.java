@@ -37,5 +37,11 @@ public class UserController {
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("")
+    public Mono<ResponseEntity<List<UserResponse>>> getUsers(){
+        return userService.findAll()
+                .collectList()
+                .map(ResponseEntity::ok);
+    }
 
 }

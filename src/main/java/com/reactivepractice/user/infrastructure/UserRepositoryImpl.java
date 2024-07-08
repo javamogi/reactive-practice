@@ -25,4 +25,9 @@ public class UserRepositoryImpl implements UserRepository {
                 .map(UserEntity::toModel);
     }
 
+    @Override
+    public Flux<User> findAll() {
+        return userReactiveRepository.findAll()
+                .map(UserEntity::toModel);
+    }
 }

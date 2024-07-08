@@ -9,4 +9,5 @@ public interface UserRepository {
 
     Mono<User> findByEmail(String email);
 
+    Flux<User> findAll();
 }

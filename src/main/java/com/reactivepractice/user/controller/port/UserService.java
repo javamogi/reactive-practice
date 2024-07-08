@@ -10,4 +10,5 @@ public interface UserService {
 
     Mono<UserResponse> findByEmail(String email);
 
+    Flux<UserResponse> findAll();
 }

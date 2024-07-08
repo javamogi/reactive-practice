@@ -113,5 +113,52 @@ class UserControllerTest {
                 .verifyComplete();
     }
 
+    @Test
+    @DisplayName("회원 목록 조회")
+    void getUsers(){
+        // given
+        TestContainer testContainer = TestContainer.builder()
+                .build();
+        testContainer.userRepository.save(User.from(UserRequest.builder()
+                .email("test@test.test")
+                .password("test")
+                .build()));
+        testContainer.userRepository.save(User.from(UserRequest.builder()
+                .email("test2@test.test")
+                .password("test2")
+                .build()));
+
+        // when
+        Mono<ResponseEntity<List<UserResponse>>> result = testContainer.userController.getUsers();
+
+        // then
+        StepVerifier.create(result)
+                .assertNext(response -> {
+                    assertThat(response.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(200));
+                    assertThat(response.getBody()).isNotNull();
+                    assertThat(response.getBody()).hasSize(2);
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("목록 조회 없음")
+    void getUsersEmpty(){
+        // given
+        TestContainer testContainer = TestContainer.builder()
+                .build();
+
+        // when
+        Mono<ResponseEntity<List<UserResponse>>> result = testContainer.userController.getUsers();
+
+        // then
+        StepVerifier.create(result)
+                .assertNext(response -> {
+                    assertThat(response.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(200));
+                    assertThat(response.getBody()).isNotNull();
+                    assertThat(response.getBody()).isEmpty();
+                })
+                .verifyComplete();
+    }
 
 }

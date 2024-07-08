@@ -107,5 +107,18 @@ class UserServiceImplTest {
                 .verifyComplete();
     }
 
+    @Test
+    @DisplayName("회원 목록 조회")
+    void findAll(){
+        //given
+        //when
+        Flux<UserResponse> users = userService.findAll();
+
+        //then
+        StepVerifier.create(users)
+                .expectNextCount(2)
+                .assertNext(u -> assertThat(u.getEmail()).isEqualTo("test@test.test"))
+                .assertNext(u -> assertThat(u.getEmail()).isEqualTo("test2@test.test"));
+    }
 
 }

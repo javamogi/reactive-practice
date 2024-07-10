@@ -22,9 +22,9 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("")
-    public Mono<ResponseEntity<UserResponse>> register(@RequestBody Mono<UserRequest> user){
-        return user.flatMap(userService::register)
-                .map(u -> ResponseEntity.status(HttpStatus.CREATED).body(u))
+    public Mono<ResponseEntity<UserResponse>> register(@RequestBody Mono<UserRequest> request){
+        return request.flatMap(userService::register)
+                .map(user -> ResponseEntity.status(HttpStatus.CREATED).body(user))
                 .onErrorResume(DuplicateKeyException.class,
                         error -> Mono.just(ResponseEntity.status(HttpStatus.CONFLICT).build()));
     }

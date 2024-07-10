@@ -20,10 +20,10 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
     @Override
-    public Mono<UserResponse> register(UserRequest user){
-        return userRepository.findByEmail(user.getEmail())
-                .flatMap(u -> Mono.<User>error(new DuplicateKeyException("already exist email " + user.getEmail())))
-                .switchIfEmpty(Mono.defer(() -> userRepository.save(User.from(user))))
+    public Mono<UserResponse> register(UserRequest request){
+        return userRepository.findByEmail(request.getEmail())
+                .flatMap(user -> Mono.<User>error(new DuplicateKeyException("already exist email " + request.getEmail())))
+                .switchIfEmpty(Mono.defer(() -> userRepository.save(User.from(request))))
                 .map(UserResponse::of);
     }
 

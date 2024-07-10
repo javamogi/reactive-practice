@@ -50,7 +50,8 @@ class UserServiceImplTest {
                 .build();
 
         //when
-        Mono<UserResponse> register = userService.register(user);
+        Mono<UserResponse> register = userService.register(user)
+                .cache();
 
         //then
         StepVerifier.create(register)

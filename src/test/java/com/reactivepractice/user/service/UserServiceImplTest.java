@@ -15,6 +15,11 @@ import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
@@ -41,7 +46,7 @@ class UserServiceImplTest {
 
     @Test
     @DisplayName("등록")
-    void register(){
+    void register() throws InterruptedException {
         //given
         Hooks.onOperatorDebug();
         UserRequest user = UserRequest.builder()
@@ -50,16 +55,43 @@ class UserServiceImplTest {
                 .build();
 
         //when
-        Mono<UserResponse> register = userService.register(user)
-                .cache();
+        Mono<UserResponse> register = userService.register(user);
 
         //then
+//        StepVerifier.create(userService.register(user))
         StepVerifier.create(register)
                 .assertNext(u -> {
                     assertThat(u.getId()).isEqualTo(3);
                     assertThat(u.getEmail()).isEqualTo("test3@test.test");
                 })
+//                .expectNextMatches(userResponse -> userResponse.getEmail().equals("test3@test.test"))
                 .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("등록 동시성 테스트")
+    void registerParallel() throws InterruptedException {
+        //given
+        Hooks.onOperatorDebug();
+        UserRequest user = UserRequest.builder()
+                .email("test3@test.test")
+                .password("test3")
+                .build();
+
+        UserRequest user2 = UserRequest.builder()
+                .email("test3@test.test")
+                .password("test3")
+                .build();
+
+        //when
+        Mono<UserResponse> register = userService.register(user);
+        Mono<UserResponse> register2 = userService.register(user2);
+        List<Mono<UserResponse>> registers = List.of(register, register2);
+
+        //then
+        StepVerifier.create(Mono.when(registers))
+                .expectError(DuplicateKeyException.class)
+                .verify();
     }
 
     @Test

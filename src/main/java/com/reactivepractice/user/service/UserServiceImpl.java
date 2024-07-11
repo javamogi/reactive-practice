@@ -24,7 +24,8 @@ public class UserServiceImpl implements UserService {
         return userRepository.findByEmail(request.getEmail())
                 .flatMap(user -> Mono.<User>error(new DuplicateKeyException("already exist email " + request.getEmail())))
                 .switchIfEmpty(Mono.defer(() -> userRepository.save(User.from(request))))
-                .map(UserResponse::of);
+                .map(UserResponse::of)
+                .cache();
     }
 
     @Override

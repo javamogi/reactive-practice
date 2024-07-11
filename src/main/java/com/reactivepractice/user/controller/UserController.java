@@ -9,6 +9,8 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -38,10 +40,9 @@ public class UserController {
     }
 
     @GetMapping("")
-    public Mono<ResponseEntity<List<UserResponse>>> getUsers(){
-        return userService.findAll()
-                .collectList()
-                .map(ResponseEntity::ok);
+    public ResponseEntity<Flux<UserResponse>> getUsers(){
+        return ResponseEntity.ok()
+                .body(userService.findAll());
     }
 
 }

@@ -7,13 +7,16 @@ import com.reactivepractice.user.domain.UserRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 
 import java.util.List;
+import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -129,14 +132,19 @@ class UserControllerTest {
                 .build()));
 
         // when
-        Mono<ResponseEntity<List<UserResponse>>> result = testContainer.userController.getUsers();
+        ResponseEntity<Flux<UserResponse>> result = testContainer.userController.getUsers();
 
         // then
-        StepVerifier.create(result)
+        assertThat(result).isNotNull();
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+        StepVerifier.create(result.getBody())
                 .assertNext(response -> {
-                    assertThat(response.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(200));
-                    assertThat(response.getBody()).isNotNull();
-                    assertThat(response.getBody()).hasSize(2);
+                    assertThat(response.getId()).isEqualTo(1);
+                    assertThat(response.getEmail()).isEqualTo("test@test.test");
+                })
+                .assertNext(response -> {
+                    assertThat(response.getId()).isEqualTo(2);
+                    assertThat(response.getEmail()).isEqualTo("test2@test.test");
                 })
                 .verifyComplete();
     }
@@ -149,15 +157,12 @@ class UserControllerTest {
                 .build();
 
         // when
-        Mono<ResponseEntity<List<UserResponse>>> result = testContainer.userController.getUsers();
+        ResponseEntity<Flux<UserResponse>> result = testContainer.userController.getUsers();
 
         // then
-        StepVerifier.create(result)
-                .assertNext(response -> {
-                    assertThat(response.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(200));
-                    assertThat(response.getBody()).isNotNull();
-                    assertThat(response.getBody()).isEmpty();
-                })
+        assertThat(result).isNotNull();
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+        StepVerifier.create(result.getBody())
                 .verifyComplete();
     }
 

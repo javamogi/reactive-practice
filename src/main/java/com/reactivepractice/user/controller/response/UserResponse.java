@@ -1,13 +1,13 @@
 package com.reactivepractice.user.controller.response;
 
 import com.reactivepractice.user.domain.User;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.ToString;
+import lombok.*;
 
 @Builder
 @Getter
 @ToString
+@AllArgsConstructor
+@NoArgsConstructor
 public class UserResponse {
     private Long id;
     private String email;

@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/usersController")
 @RequiredArgsConstructor
 @Builder
 public class UserController {

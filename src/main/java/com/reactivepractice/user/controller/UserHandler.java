@@ -1,5 +1,7 @@
 package com.reactivepractice.user.controller;
 
+import com.reactivepractice.exception.ErrorCode;
+import com.reactivepractice.exception.ErrorResponse;
 import com.reactivepractice.user.controller.port.UserService;
 import com.reactivepractice.user.controller.response.UserResponse;
 import com.reactivepractice.user.domain.UserRequest;
@@ -29,14 +31,19 @@ public class UserHandler {
                         ServerResponse.status(HttpStatus.CREATED).body(BodyInserters.fromValue(response)))
                 .onErrorResume(DuplicateKeyException.class,
                         throwable ->
-                                ServerResponse.status(HttpStatus.CONFLICT).body(BodyInserters.fromValue(throwable.getMessage())));
+                                ServerResponse
+                                        .status(HttpStatus.CONFLICT)
+                                        .body(BodyInserters.fromValue(ErrorResponse.of(ErrorCode.ALREADY_EXIST))));
     }
 
     public Mono<ServerResponse> findByEmail(ServerRequest serverRequest) {
         return serverRequest.queryParam("email")
+                .filter(email -> !email.isEmpty())
                 .map(email -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
                         .body(userService.findByEmail(email), UserResponse.class))
-                .orElseGet(() -> ServerResponse.badRequest().build());
+                .orElseGet(() -> ServerResponse
+                        .status(HttpStatus.BAD_REQUEST)
+                        .body(BodyInserters.fromValue(ErrorResponse.of(ErrorCode.BAD_REQUEST))));
     }
 
     public Mono<ServerResponse> findAll(ServerRequest serverRequest) {

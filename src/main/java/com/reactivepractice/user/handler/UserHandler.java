@@ -1,8 +1,8 @@
-package com.reactivepractice.user.controller;
+package com.reactivepractice.user.handler;
 
 import com.reactivepractice.exception.BadRequestException;
-import com.reactivepractice.user.controller.port.UserService;
-import com.reactivepractice.user.controller.response.UserResponse;
+import com.reactivepractice.user.handler.port.UserService;
+import com.reactivepractice.user.handler.response.UserResponse;
 import com.reactivepractice.user.domain.UserRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

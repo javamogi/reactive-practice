@@ -1,8 +1,8 @@
 package com.reactivepractice.user.service;
 
 import com.reactivepractice.exception.DuplicationException;
-import com.reactivepractice.user.controller.port.UserService;
-import com.reactivepractice.user.controller.response.UserResponse;
+import com.reactivepractice.user.handler.port.UserService;
+import com.reactivepractice.user.handler.response.UserResponse;
 import com.reactivepractice.user.domain.User;
 import com.reactivepractice.user.domain.UserRequest;
 import com.reactivepractice.user.service.port.UserRepository;

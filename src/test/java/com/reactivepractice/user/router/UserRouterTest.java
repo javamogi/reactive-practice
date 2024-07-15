@@ -1,12 +1,10 @@
-package com.reactivepractice.user.controller;
+package com.reactivepractice.user.router;
 
-import com.reactivepractice.user.controller.response.UserResponse;
+import com.reactivepractice.user.handler.response.UserResponse;
 import com.reactivepractice.user.domain.User;
 import com.reactivepractice.user.domain.UserRequest;
 import com.reactivepractice.user.service.port.UserRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -26,8 +24,8 @@ class UserRouterTest {
     @Autowired
     private WebTestClient webTestClient;
 
-    @BeforeEach
-    void init(){
+    @BeforeAll
+    static void init(@Autowired UserRepository userRepository){
         userRepository.save(User.builder()
                 .email("test@test.test")
                 .password("test")

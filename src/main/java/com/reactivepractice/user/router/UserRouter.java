@@ -2,7 +2,7 @@ package com.reactivepractice.user.router;
 
 import com.reactivepractice.exception.CustomBaseException;
 import com.reactivepractice.exception.ErrorResponse;
-import com.reactivepractice.user.controller.UserHandler;
+import com.reactivepractice.user.handler.UserHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;

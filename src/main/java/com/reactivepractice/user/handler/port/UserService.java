@@ -1,6 +1,6 @@
-package com.reactivepractice.user.controller.port;
+package com.reactivepractice.user.handler.port;
 
-import com.reactivepractice.user.controller.response.UserResponse;
+import com.reactivepractice.user.handler.response.UserResponse;
 import com.reactivepractice.user.domain.UserRequest;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;

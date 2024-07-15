@@ -1,10 +1,10 @@
 package com.reactivepractice.user.service;
 
+import com.reactivepractice.exception.DuplicationException;
 import com.reactivepractice.mock.FakeUserRepository;
-import com.reactivepractice.user.controller.response.UserResponse;
+import com.reactivepractice.user.handler.response.UserResponse;
 import com.reactivepractice.user.domain.User;
 import com.reactivepractice.user.domain.UserRequest;
-import com.reactivepractice.user.infrastructure.UserEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -16,9 +16,6 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -90,7 +87,7 @@ class UserServiceImplTest {
 
         //then
         StepVerifier.create(Mono.when(registers))
-                .expectError(DuplicateKeyException.class)
+                .expectError(DuplicationException.class)
                 .verify();
     }
 
@@ -107,7 +104,7 @@ class UserServiceImplTest {
 
         //then
         StepVerifier.create(register)
-                .expectError(DuplicateKeyException.class)
+                .expectError(DuplicationException.class)
                 .verify();
     }
 

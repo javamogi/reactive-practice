@@ -1,4 +1,4 @@
-package com.reactivepractice.user.controller.response;
+package com.reactivepractice.user.handler.response;
 
 import com.reactivepractice.user.domain.User;
 import lombok.*;

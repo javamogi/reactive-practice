@@ -1,5 +1,7 @@
 package com.reactivepractice.user.controller;
 
+import com.reactivepractice.exception.model.BadRequestException;
+import com.reactivepractice.exception.model.NotFoundException;
 import com.reactivepractice.user.controller.port.UserService;
 import com.reactivepractice.user.controller.response.UserResponse;
 import com.reactivepractice.user.domain.UserRequest;
@@ -16,7 +18,7 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 @RestController
-@RequestMapping("/usersController")
+@RequestMapping("/users")
 @RequiredArgsConstructor
 @Builder
 public class UserController {
@@ -26,17 +28,22 @@ public class UserController {
     @PostMapping("")
     public Mono<ResponseEntity<UserResponse>> register(@RequestBody Mono<UserRequest> request){
         return request.flatMap(userService::register)
-                .map(user -> ResponseEntity.status(HttpStatus.CREATED).body(user))
-                .onErrorResume(DuplicateKeyException.class,
-                        error -> Mono.just(ResponseEntity.status(HttpStatus.CONFLICT).build()));
+                .map(user -> ResponseEntity.status(HttpStatus.CREATED).body(user));
     }
 
     @GetMapping("/search")
     public Mono<ResponseEntity<UserResponse>> getUserByEmail(@RequestParam(name = "email") String email){
-        return Mono.just(email)
-                .flatMap(userService::findByEmail)
-                .map(ResponseEntity::ok)
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+        return Mono.defer(() -> {
+            if(email == null || email.isEmpty()){
+                return Mono.error(new BadRequestException());
+            } else {
+                return userService.findByEmail(email)
+                        .map(ResponseEntity::ok);
+            }
+        });
+//        return Mono.just(email)
+//                .flatMap(userService::findByEmail)
+//                .map(ResponseEntity::ok);
     }
 
     @GetMapping("")

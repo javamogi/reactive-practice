@@ -1,5 +1,8 @@
 package com.reactivepractice.user.controller;
 
+import com.reactivepractice.exception.model.BadRequestException;
+import com.reactivepractice.exception.model.DuplicationException;
+import com.reactivepractice.exception.model.NotFoundException;
 import com.reactivepractice.mock.TestContainer;
 import com.reactivepractice.user.controller.response.UserResponse;
 import com.reactivepractice.user.domain.User;
@@ -15,8 +18,6 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 
-import java.util.List;
-import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -65,10 +66,8 @@ class UserControllerTest {
 
         // then
         StepVerifier.create(result)
-                .assertNext(response -> {
-                    assertThat(response.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(409));
-                })
-                .verifyComplete();
+                .expectError(DuplicationException.class)
+                .verify();
     }
 
     @Test
@@ -98,6 +97,27 @@ class UserControllerTest {
     }
 
     @Test
+    @DisplayName("비어있는 이메일 검색어")
+    void getUserByEmailWhenBadRequest(){
+        // given
+        TestContainer testContainer = TestContainer.builder()
+                .build();
+        testContainer.userRepository.save(User.from(UserRequest.builder()
+                .email("test@test.test")
+                .password("test")
+                .build()));
+        String email = "";
+
+        // when
+        Mono<ResponseEntity<UserResponse>> result = testContainer.userController.getUserByEmail(email);
+
+        // then
+        StepVerifier.create(result)
+                .expectError(BadRequestException.class)
+                .verify();
+    }
+
+    @Test
     @DisplayName("가입된 이메일 없음")
     void getUserByEmailWhenNotFound(){
         // given
@@ -110,10 +130,8 @@ class UserControllerTest {
 
         // then
         StepVerifier.create(result)
-                .assertNext(response -> {
-                    assertThat(response.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(404));
-                })
-                .verifyComplete();
+                .expectError(NotFoundException.class)
+                .verify();
     }
 
     @Test

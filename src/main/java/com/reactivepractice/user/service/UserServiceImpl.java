@@ -1,6 +1,7 @@
 package com.reactivepractice.user.service;
 
-import com.reactivepractice.exception.DuplicationException;
+import com.reactivepractice.exception.model.DuplicationException;
+import com.reactivepractice.exception.model.NotFoundException;
 import com.reactivepractice.user.controller.port.UserService;
 import com.reactivepractice.user.controller.response.UserResponse;
 import com.reactivepractice.user.domain.User;
@@ -31,7 +32,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public Mono<UserResponse> findByEmail(String email) {
         return userRepository.findByEmail(email)
-                .map(UserResponse::of);
+                .map(UserResponse::of)
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new NotFoundException())));
     }
 
     @Override

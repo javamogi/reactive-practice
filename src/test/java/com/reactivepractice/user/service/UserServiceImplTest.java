@@ -1,6 +1,8 @@
 package com.reactivepractice.user.service;
 
 import com.reactivepractice.exception.DuplicationException;
+import com.reactivepractice.exception.UnauthorizedException;
+import com.reactivepractice.exception.NotFoundException;
 import com.reactivepractice.mock.FakeUserRepository;
 import com.reactivepractice.user.handler.response.UserResponse;
 import com.reactivepractice.user.domain.User;
@@ -9,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.dao.DuplicateKeyException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
@@ -43,7 +44,7 @@ class UserServiceImplTest {
 
     @Test
     @DisplayName("등록")
-    void register() throws InterruptedException {
+    void register() {
         //given
         Hooks.onOperatorDebug();
         UserRequest user = UserRequest.builder()
@@ -67,7 +68,7 @@ class UserServiceImplTest {
 
     @Test
     @DisplayName("등록 동시성 테스트")
-    void registerParallel() throws InterruptedException {
+    void registerParallel() {
         //given
         Hooks.onOperatorDebug();
         UserRequest user = UserRequest.builder()
@@ -149,6 +150,63 @@ class UserServiceImplTest {
                 .expectNextCount(2)
                 .assertNext(u -> assertThat(u.getEmail()).isEqualTo("test@test.test"))
                 .assertNext(u -> assertThat(u.getEmail()).isEqualTo("test2@test.test"));
+    }
+
+    @Test
+    @DisplayName("로그인")
+    void login() {
+        //given
+        UserRequest user = UserRequest.builder()
+                .email("test@test.test")
+                .password("test")
+                .build();
+
+        //when
+        Mono<UserResponse> register = userService.login(user);
+
+        //then
+        StepVerifier.create(register)
+                .assertNext(u -> {
+                    assertThat(u.getId()).isEqualTo(1);
+                    assertThat(u.getEmail()).isEqualTo("test@test.test");
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("로그인 실패 가입회원 없음")
+    void failedLoginWhenNotFoundUser() {
+        //given
+        UserRequest user = UserRequest.builder()
+                .email("test99@test.test")
+                .password("test")
+                .build();
+
+        //when
+        Mono<UserResponse> register = userService.login(user);
+
+        //then
+        StepVerifier.create(register)
+                .expectError(NotFoundException.class)
+                .verify();
+    }
+
+    @Test
+    @DisplayName("로그인 실패 비밀번호 틀림")
+    void failedLoginWhenNotMatchingPassword() {
+        //given
+        UserRequest user = UserRequest.builder()
+                .email("test@test.test")
+                .password("password")
+                .build();
+
+        //when
+        Mono<UserResponse> register = userService.login(user);
+
+        //then
+        StepVerifier.create(register)
+                .expectError(UnauthorizedException.class)
+                .verify();
     }
 
 }

@@ -120,4 +120,62 @@ class UserHandlerTest {
                 .verifyComplete();
     }
 
+    @Test
+    @DisplayName("로그인")
+    void login() {
+        TestContainer testContainer = TestContainer.builder().build();
+        testContainer.userRepository.save(User.builder()
+                .email("test@test.test")
+                .password("test")
+                .build());
+        UserRequest userRequest = UserRequest.builder()
+                .email("test@test.test")
+                .password("test")
+                .build();
+        MockServerRequest request = MockServerRequest.builder()
+                .body(Mono.just(userRequest));
+        Mono<ServerResponse> login = testContainer.userHandler.login(request);
+        StepVerifier.create(login)
+                .assertNext(response -> {
+                    assertThat(response.statusCode()).isEqualTo(HttpStatus.OK);
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("로그인 실패 가입하지 않은 회원")
+    void failedLoginWhenNotFoundUser() {
+        TestContainer testContainer = TestContainer.builder().build();
+        UserRequest userRequest = UserRequest.builder()
+                .email("test@test.test")
+                .password("test")
+                .build();
+        MockServerRequest request = MockServerRequest.builder()
+                .body(Mono.just(userRequest));
+        Mono<ServerResponse> login = testContainer.userHandler.login(request);
+        StepVerifier.create(login)
+                .expectError(NotFoundException.class)
+                .verify();
+    }
+
+    @Test
+    @DisplayName("로그인 실패 비밀번호 틀림")
+    void failedLoginWhenNotMatchingPassword() {
+        TestContainer testContainer = TestContainer.builder().build();
+        testContainer.userRepository.save(User.builder()
+                .email("test@test.test")
+                .password("test")
+                .build());
+        UserRequest userRequest = UserRequest.builder()
+                .email("test@test.test")
+                .password("test2")
+                .build();
+        MockServerRequest request = MockServerRequest.builder()
+                .body(Mono.just(userRequest));
+        Mono<ServerResponse> login = testContainer.userHandler.login(request);
+        StepVerifier.create(login)
+                .expectError(UnauthorizedException.class)
+                .verify();
+    }
+
 }

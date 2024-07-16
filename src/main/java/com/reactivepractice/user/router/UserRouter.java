@@ -25,6 +25,7 @@ public class UserRouter {
                         .POST("", userHandler::register)
                         .GET("", userHandler::findAll))
                         .GET("/search", userHandler::findByEmail)
+                        .POST("/login", userHandler::login)
                 )
                 .filter((request, next) -> next.handle(request)
                         .onErrorResume(CustomBaseException.class, this::handleGlobalException))
@@ -38,4 +39,5 @@ public class UserRouter {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromValue(errorResponse));
     }
+
 }

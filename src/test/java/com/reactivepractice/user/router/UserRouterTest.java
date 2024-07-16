@@ -1,5 +1,8 @@
 package com.reactivepractice.user.router;
 
+import com.reactivepractice.exception.ErrorCode;
+import com.reactivepractice.exception.NotFoundException;
+import com.reactivepractice.exception.UnauthorizedException;
 import com.reactivepractice.user.handler.response.UserResponse;
 import com.reactivepractice.user.domain.User;
 import com.reactivepractice.user.domain.UserRequest;
@@ -102,7 +105,6 @@ class UserRouterTest {
     @Test
     @DisplayName("회원 목록")
     void findAll(){
-
         webTestClient
                 .get().uri("/users")
                 .accept(MediaType.APPLICATION_JSON)
@@ -110,5 +112,65 @@ class UserRouterTest {
                 .expectStatus().isOk()
                 .expectBodyList(UserResponse.class)
                 .hasSize(1);
+    }
+
+    @Test
+    @DisplayName("로그인")
+    void login(){
+        UserRequest request = UserRequest.builder()
+                .email("test@test.test")
+                .password("test")
+                .build();
+        webTestClient
+                .post().uri("/users/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(UserResponse.class).value(user -> {
+                    assertThat(user.getId()).isEqualTo(1);
+                    assertThat(user.getEmail()).isEqualTo("test@test.test");
+                });
+    }
+
+    @Test
+    @DisplayName("로그인 실패 가입되지 않은 이메일")
+    void failedLoginWhenNotFoundUser(){
+        UserRequest request = UserRequest.builder()
+                .email("test99@test.test")
+                .password("test")
+                .build();
+        webTestClient
+                .post().uri("/users/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody(NotFoundException.class).value(ex -> {
+                   assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.NOT_FOUND);
+                   assertThat(ex.getMessage()).isEqualTo(ErrorCode.NOT_FOUND.getMessage());
+                });
+    }
+
+    @Test
+    @DisplayName("로그인 실패 비밀번호 틀림")
+    void failedLoginWhenNotMatchingPassword(){
+        UserRequest request = UserRequest.builder()
+                .email("test@test.test")
+                .password("test2")
+                .build();
+        webTestClient
+                .post().uri("/users/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isUnauthorized()
+                .expectBody(UnauthorizedException.class).value(ex -> {
+                    assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.UNAUTHORIZED);
+                    assertThat(ex.getMessage()).isEqualTo(ErrorCode.UNAUTHORIZED.getMessage());
+                });
     }
 }

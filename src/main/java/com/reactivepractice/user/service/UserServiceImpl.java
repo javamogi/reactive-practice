@@ -1,6 +1,8 @@
 package com.reactivepractice.user.service;
 
 import com.reactivepractice.exception.DuplicationException;
+import com.reactivepractice.exception.UnauthorizedException;
+import com.reactivepractice.exception.NotFoundException;
 import com.reactivepractice.user.handler.port.UserService;
 import com.reactivepractice.user.handler.response.UserResponse;
 import com.reactivepractice.user.domain.User;
@@ -38,6 +40,16 @@ public class UserServiceImpl implements UserService {
     public Flux<UserResponse> findAll() {
         return userRepository.findAll()
                 .map(UserResponse::of);
+    }
+
+    @Override
+    public Mono<UserResponse> login(UserRequest request){
+        return userRepository.findByEmail(request.getEmail())
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new NotFoundException())))
+                .filter(user -> user.getPassword().equals(request.getPassword()))
+                .map(UserResponse::of)
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new UnauthorizedException())))
+                .cache();
     }
 
 }

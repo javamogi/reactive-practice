@@ -4,6 +4,7 @@ import com.reactivepractice.exception.BadRequestException;
 import com.reactivepractice.user.handler.port.UserService;
 import com.reactivepractice.user.handler.response.UserResponse;
 import com.reactivepractice.user.domain.UserRequest;
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -18,6 +19,7 @@ import reactor.core.publisher.Mono;
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@Builder
 public class UserHandler {
 
     private final UserService userService;
@@ -40,6 +42,13 @@ public class UserHandler {
     public Mono<ServerResponse> findAll(ServerRequest serverRequest) {
         return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
                 .body(userService.findAll(), UserResponse.class);
+    }
+
+    public Mono<ServerResponse> login(ServerRequest serverRequest){
+        return serverRequest.bodyToMono(UserRequest.class)
+                .flatMap(userService::login)
+                .flatMap(response ->
+                        ServerResponse.status(HttpStatus.OK).body(BodyInserters.fromValue(response)));
     }
 
 }

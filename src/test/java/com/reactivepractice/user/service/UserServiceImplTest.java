@@ -3,6 +3,7 @@ package com.reactivepractice.user.service;
 import com.reactivepractice.exception.DuplicationException;
 import com.reactivepractice.exception.UnauthorizedException;
 import com.reactivepractice.exception.NotFoundException;
+import com.reactivepractice.mock.FakePasswordEncoder;
 import com.reactivepractice.mock.FakeUserRepository;
 import com.reactivepractice.user.handler.response.UserResponse;
 import com.reactivepractice.user.domain.User;
@@ -28,18 +29,20 @@ class UserServiceImplTest {
     @BeforeEach
     void init() {
         FakeUserRepository fakeUserRepository = new FakeUserRepository();
+        FakePasswordEncoder fakePasswordEncoder = new FakePasswordEncoder();
         this.userService = UserServiceImpl.builder()
                 .userRepository(fakeUserRepository)
+                .passwordEncoder(fakePasswordEncoder)
                 .build();
 
-        fakeUserRepository.save(User.from(UserRequest.builder()
+        fakeUserRepository.save(User.builder()
                 .email("test@test.test")
                 .password("test")
-                .build()));
-        fakeUserRepository.save(User.from(UserRequest.builder()
+                .build());
+        fakeUserRepository.save(User.builder()
                 .email("test2@test.test")
                 .password("test2")
-                .build()));
+                .build());
     }
 
     @Test

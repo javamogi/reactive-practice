@@ -1,5 +1,6 @@
 package com.reactivepractice.user.service;
 
+import com.reactivepractice.common.PasswordEncoder;
 import com.reactivepractice.exception.DuplicationException;
 import com.reactivepractice.exception.UnauthorizedException;
 import com.reactivepractice.exception.NotFoundException;
@@ -20,12 +21,13 @@ import reactor.core.publisher.Mono;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public Mono<UserResponse> register(UserRequest request){
         return userRepository.findByEmail(request.getEmail())
                 .flatMap(user -> Mono.<User>error(new DuplicationException()))
-                .switchIfEmpty(Mono.defer(() -> userRepository.save(User.from(request))))
+                .switchIfEmpty(Mono.defer(() -> userRepository.save(User.from(request, passwordEncoder))))
                 .map(UserResponse::of)
                 .cache();
     }
@@ -46,7 +48,7 @@ public class UserServiceImpl implements UserService {
     public Mono<UserResponse> login(UserRequest request){
         return userRepository.findByEmail(request.getEmail())
                 .switchIfEmpty(Mono.defer(() -> Mono.error(new NotFoundException())))
-                .filter(user -> user.getPassword().equals(request.getPassword()))
+                .filter(user -> passwordEncoder.matches(request.getPassword(), user.getPassword()))
                 .map(UserResponse::of)
                 .switchIfEmpty(Mono.defer(() -> Mono.error(new UnauthorizedException())))
                 .cache();

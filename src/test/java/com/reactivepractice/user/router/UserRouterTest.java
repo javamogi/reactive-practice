@@ -1,5 +1,6 @@
 package com.reactivepractice.user.router;
 
+import com.reactivepractice.common.PasswordEncoder;
 import com.reactivepractice.exception.ErrorCode;
 import com.reactivepractice.exception.NotFoundException;
 import com.reactivepractice.exception.UnauthorizedException;
@@ -25,13 +26,17 @@ class UserRouterTest {
     UserRepository userRepository;
 
     @Autowired
-    private WebTestClient webTestClient;
+    WebTestClient webTestClient;
+
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
     @BeforeAll
-    static void init(@Autowired UserRepository userRepository){
+    static void init(@Autowired UserRepository userRepository,
+                     @Autowired PasswordEncoder passwordEncoder){
         userRepository.save(User.builder()
                 .email("test@test.test")
-                .password("test")
+                .password(passwordEncoder.encode("test"))
                 .build()).subscribe();
     }
 

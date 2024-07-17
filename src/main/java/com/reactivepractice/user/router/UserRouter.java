@@ -1,8 +1,11 @@
 package com.reactivepractice.user.router;
 
+import com.reactivepractice.common.BCryptPasswordEncoder;
+import com.reactivepractice.common.PasswordEncoder;
 import com.reactivepractice.exception.CustomBaseException;
 import com.reactivepractice.exception.ErrorResponse;
 import com.reactivepractice.user.handler.UserHandler;
+import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
@@ -40,4 +43,8 @@ public class UserRouter {
                 .body(BodyInserters.fromValue(errorResponse));
     }
 
+    @Bean
+    public PasswordEncoder passwordEncoder(){
+        return new BCryptPasswordEncoder();
+    }
 }

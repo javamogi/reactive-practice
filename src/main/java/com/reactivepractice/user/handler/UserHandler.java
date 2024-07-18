@@ -31,7 +31,7 @@ public class UserHandler {
                         ServerResponse.status(HttpStatus.CREATED).body(BodyInserters.fromValue(response)));
     }
 
-    public Mono<ServerResponse> findByEmail(ServerRequest serverRequest) {
+    public Mono<ServerResponse> getUserByEmail(ServerRequest serverRequest) {
         return serverRequest.queryParam("email")
                 .filter(email -> !email.isEmpty())
                 .map(email -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
@@ -39,7 +39,16 @@ public class UserHandler {
                 .orElseGet(() -> Mono.error(new BadRequestException()));
     }
 
-    public Mono<ServerResponse> findAll(ServerRequest serverRequest) {
+    public Mono<ServerResponse> getUserById(ServerRequest serverRequest) {
+        return Mono.just(serverRequest.pathVariable("id"))
+                .map(Long::parseLong)
+                .onErrorResume(NumberFormatException.class, throwable -> Mono.error(new BadRequestException()))
+                .flatMap(id -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
+                        .body(userService.findById(id), UserResponse.class)
+                        .switchIfEmpty(Mono.error(new BadRequestException())));
+    }
+
+    public Mono<ServerResponse> getAll(ServerRequest serverRequest) {
         return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
                 .body(userService.findAll(), UserResponse.class);
     }

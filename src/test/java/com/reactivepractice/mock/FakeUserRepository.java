@@ -42,6 +42,13 @@ public class FakeUserRepository implements UserRepository {
     }
 
     @Override
+    public Mono<User> findById(Long id) {
+        return Flux.fromIterable(data)
+                .filter(user -> user.getId().equals(id))
+                .next();
+    }
+
+    @Override
     public Flux<User> findAll() {
         return Flux.fromIterable(data);
     }

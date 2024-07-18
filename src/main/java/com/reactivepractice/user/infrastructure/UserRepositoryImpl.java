@@ -26,6 +26,12 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public Mono<User> findById(Long id) {
+        return userReactiveRepository.findById(id)
+                .map(UserEntity::toModel);
+    }
+
+    @Override
     public Flux<User> findAll() {
         return userReactiveRepository.findAll()
                 .map(UserEntity::toModel);

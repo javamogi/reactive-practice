@@ -39,6 +39,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public Mono<UserResponse> findById(Long id) {
+        return userRepository.findById(id)
+                .map(UserResponse::of);
+    }
+
+    @Override
     public Flux<UserResponse> findAll() {
         return userRepository.findAll()
                 .map(UserResponse::of);

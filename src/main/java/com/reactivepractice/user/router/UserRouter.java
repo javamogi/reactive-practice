@@ -5,7 +5,6 @@ import com.reactivepractice.common.PasswordEncoder;
 import com.reactivepractice.exception.CustomBaseException;
 import com.reactivepractice.exception.ErrorResponse;
 import com.reactivepractice.user.handler.UserHandler;
-import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
@@ -26,8 +25,9 @@ public class UserRouter {
                 .path("/users", builder -> builder
                         .nest(accept(MediaType.APPLICATION_JSON), builder2 -> builder2
                         .POST("", userHandler::register)
-                        .GET("", userHandler::findAll))
-                        .GET("/search", userHandler::findByEmail)
+                        .GET("", userHandler::getAll))
+                        .GET("/search", userHandler::getUserByEmail)
+                        .GET("/{id}", userHandler::getUserById)
                         .POST("/login", userHandler::login)
                 )
                 .filter((request, next) -> next.handle(request)

@@ -9,5 +9,7 @@ public interface UserRepository {
 
     Mono<User> findByEmail(String email);
 
+    Mono<User> findById(Long id);
+
     Flux<User> findAll();
 }

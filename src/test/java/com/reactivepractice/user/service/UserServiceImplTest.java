@@ -142,6 +142,22 @@ class UserServiceImplTest {
     }
 
     @Test
+    @DisplayName("ID 조회")
+    void findById(){
+        //given
+        //when
+        Mono<UserResponse> user = userService.findById(1L);
+
+        //then
+        StepVerifier.create(user)
+                .assertNext(u -> {
+                    assertThat(u.getId()).isEqualTo(1);
+                    assertThat(u.getEmail()).isEqualTo("test@test.test");
+                })
+                .verifyComplete();
+    }
+
+    @Test
     @DisplayName("회원 목록 조회")
     void findAll(){
         //given

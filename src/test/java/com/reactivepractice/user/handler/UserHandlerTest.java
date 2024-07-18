@@ -60,7 +60,7 @@ class UserHandlerTest {
 
     @Test
     @DisplayName("이메일로 검색")
-    void findByEmail() {
+    void getUserByEmail() {
         TestContainer testContainer = TestContainer.builder().build();
         testContainer.userRepository.save(User.builder()
                 .email("test@test.test")
@@ -69,7 +69,7 @@ class UserHandlerTest {
         MockServerRequest request = MockServerRequest.builder()
                 .queryParam("email", "test@test.test")
                 .build();
-        Mono<ServerResponse> register = testContainer.userHandler.findByEmail(request);
+        Mono<ServerResponse> register = testContainer.userHandler.getUserByEmail(request);
         StepVerifier.create(register)
                 .assertNext(response -> {
                     assertThat(response.statusCode()).isEqualTo(HttpStatus.OK);
@@ -79,12 +79,12 @@ class UserHandlerTest {
 
     @Test
     @DisplayName("이메일로 검색 실패 비어있는 검색어")
-    void failedFindByEmailWhenEmptyEmail() {
+    void failedGetUserByEmailWhenEmptyEmail() {
         TestContainer testContainer = TestContainer.builder().build();
         MockServerRequest request = MockServerRequest.builder()
                 .queryParam("email", "")
                 .build();
-        Mono<ServerResponse> register = testContainer.userHandler.findByEmail(request);
+        Mono<ServerResponse> register = testContainer.userHandler.getUserByEmail(request);
         StepVerifier.create(register)
                 .expectError(BadRequestException.class)
                 .verify();
@@ -92,11 +92,47 @@ class UserHandlerTest {
 
     @Test
     @DisplayName("이메일로 검색 실패 비어있는 query Param")
-    void failedFindByEmailWhenNullParameter() {
+    void failedGetUserByEmailWhenNullParameter() {
         TestContainer testContainer = TestContainer.builder().build();
         MockServerRequest request = MockServerRequest.builder()
                 .build();
-        Mono<ServerResponse> register = testContainer.userHandler.findByEmail(request);
+        Mono<ServerResponse> register = testContainer.userHandler.getUserByEmail(request);
+        StepVerifier.create(register)
+                .expectError(BadRequestException.class)
+                .verify();
+    }
+
+    @Test
+    @DisplayName("ID로 검색")
+    void getUserById() {
+        TestContainer testContainer = TestContainer.builder().build();
+        testContainer.userRepository.save(User.builder()
+                .email("test@test.test")
+                .password("test")
+                .build());
+        MockServerRequest request = MockServerRequest.builder()
+                .pathVariable("id", "1")
+                .build();
+        Mono<ServerResponse> register = testContainer.userHandler.getUserById(request);
+        StepVerifier.create(register)
+                .assertNext(response -> {
+                    assertThat(response.statusCode()).isEqualTo(HttpStatus.OK);
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("ID로 검색 빈 값")
+    void getUserByIdWhenEmptyPathVariable() {
+        TestContainer testContainer = TestContainer.builder().build();
+        testContainer.userRepository.save(User.builder()
+                .email("test@test.test")
+                .password("test")
+                .build());
+        MockServerRequest request = MockServerRequest.builder()
+                .pathVariable("id", "")
+                .build();
+        Mono<ServerResponse> register = testContainer.userHandler.getUserById(request);
         StepVerifier.create(register)
                 .expectError(BadRequestException.class)
                 .verify();
@@ -104,7 +140,7 @@ class UserHandlerTest {
 
     @Test
     @DisplayName("목록 조회")
-    void findAll() {
+    void getAll() {
         TestContainer testContainer = TestContainer.builder().build();
         testContainer.userRepository.save(User.builder()
                 .email("test@test.test")
@@ -112,7 +148,7 @@ class UserHandlerTest {
                 .build());
         MockServerRequest request = MockServerRequest.builder()
                 .build();
-        Mono<ServerResponse> register = testContainer.userHandler.findAll(request);
+        Mono<ServerResponse> register = testContainer.userHandler.getAll(request);
         StepVerifier.create(register)
                 .assertNext(response -> {
                     assertThat(response.statusCode()).isEqualTo(HttpStatus.OK);

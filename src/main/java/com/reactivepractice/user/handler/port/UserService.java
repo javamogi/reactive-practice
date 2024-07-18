@@ -10,6 +10,8 @@ public interface UserService {
 
     Mono<UserResponse> findByEmail(String email);
 
+    Mono<UserResponse> findById(Long id);
+
     Flux<UserResponse> findAll();
 
     Mono<UserResponse> login(UserRequest request);

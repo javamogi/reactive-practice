@@ -1,6 +1,8 @@
 package com.reactivepractice.user.handler;
 
 import com.reactivepractice.exception.BadRequestException;
+import com.reactivepractice.exception.UnauthorizedException;
+import com.reactivepractice.user.domain.User;
 import com.reactivepractice.user.handler.port.UserService;
 import com.reactivepractice.user.handler.response.UserResponse;
 import com.reactivepractice.user.domain.UserRequest;
@@ -56,8 +58,18 @@ public class UserHandler {
     public Mono<ServerResponse> login(ServerRequest serverRequest){
         return serverRequest.bodyToMono(UserRequest.class)
                 .flatMap(userService::login)
-                .flatMap(response ->
-                        ServerResponse.status(HttpStatus.OK).body(BodyInserters.fromValue(response)));
+                .flatMap(user -> serverRequest.session()
+                        .doOnNext(webSession -> webSession.getAttributes().put("user", user))
+                        .flatMap(webSession -> ServerResponse.status(HttpStatus.OK)
+                                .body(BodyInserters.fromValue(user))));
+    }
+
+    public Mono<ServerResponse> getLoginUser(ServerRequest serverRequest){
+        return serverRequest.session()
+                .flatMap(webSession -> Mono.just((UserResponse) webSession.getAttribute("user")))
+                .onErrorResume(NullPointerException.class, throwable -> Mono.error(new UnauthorizedException()))
+                .flatMap(user -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
+                                .body(BodyInserters.fromValue(user)));
     }
 
 }

@@ -16,24 +16,24 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public Mono<User> save(User user) {
         return userReactiveRepository.save(UserEntity.from(user))
-                .map(UserEntity::toModel);
+                .flatMap(u -> Mono.just(u.toModel()));
     }
 
     @Override
     public Mono<User> findByEmail(String email) {
         return userReactiveRepository.findByEmail(email)
-                .map(UserEntity::toModel);
+                .flatMap(user -> Mono.just(user.toModel()));
     }
 
     @Override
     public Mono<User> findById(Long id) {
         return userReactiveRepository.findById(id)
-                .map(UserEntity::toModel);
+                .flatMap(user -> Mono.just(user.toModel()));
     }
 
     @Override
     public Flux<User> findAll() {
         return userReactiveRepository.findAll()
-                .map(UserEntity::toModel);
+                .flatMap(user -> Mono.just(user.toModel()));
     }
 }

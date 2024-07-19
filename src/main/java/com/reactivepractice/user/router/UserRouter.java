@@ -5,6 +5,7 @@ import com.reactivepractice.common.PasswordEncoder;
 import com.reactivepractice.exception.CustomBaseException;
 import com.reactivepractice.exception.ErrorResponse;
 import com.reactivepractice.user.handler.UserHandler;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
@@ -17,6 +18,7 @@ import reactor.core.publisher.Mono;
 import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 
 @Configuration(proxyBeanMethods = false)
+@Slf4j
 public class UserRouter {
 
     @Bean
@@ -29,6 +31,7 @@ public class UserRouter {
                         .GET("/search", userHandler::getUserByEmail)
                         .GET("/{id}", userHandler::getUserById)
                         .POST("/login", userHandler::login)
+                        .GET("/login/info", userHandler::getLoginUser)
                 )
                 .filter((request, next) -> next.handle(request)
                         .onErrorResume(CustomBaseException.class, this::handleGlobalException))
@@ -36,6 +39,7 @@ public class UserRouter {
     }
 
     private Mono<ServerResponse> handleGlobalException(CustomBaseException ex) {
+        log.error("Global exception", ex);
         ErrorResponse errorResponse = ErrorResponse.of(ex.getErrorCode());
 
         return ServerResponse.status(ex.getErrorCode().getHttpStatus())

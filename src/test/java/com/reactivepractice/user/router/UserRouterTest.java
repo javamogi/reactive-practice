@@ -4,11 +4,13 @@ import com.reactivepractice.common.PasswordEncoder;
 import com.reactivepractice.exception.ErrorCode;
 import com.reactivepractice.exception.NotFoundException;
 import com.reactivepractice.exception.UnauthorizedException;
-import com.reactivepractice.user.handler.response.UserResponse;
 import com.reactivepractice.user.domain.User;
 import com.reactivepractice.user.domain.UserRequest;
+import com.reactivepractice.user.handler.response.UserResponse;
 import com.reactivepractice.user.service.port.UserRepository;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -133,6 +135,7 @@ class UserRouterTest {
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
+                .expectCookie().exists("SESSION")
                 .expectBody(UserResponse.class).value(user -> {
                     assertThat(user.getId()).isEqualTo(1);
                     assertThat(user.getEmail()).isEqualTo("test@test.test");

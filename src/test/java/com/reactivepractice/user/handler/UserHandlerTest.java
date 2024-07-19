@@ -7,11 +7,14 @@ import com.reactivepractice.exception.NotFoundException;
 import com.reactivepractice.mock.TestContainer;
 import com.reactivepractice.user.domain.User;
 import com.reactivepractice.user.domain.UserRequest;
+import com.reactivepractice.user.handler.response.UserResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.reactive.function.server.MockServerRequest;
+import org.springframework.mock.web.server.MockWebSession;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -169,6 +172,7 @@ class UserHandlerTest {
                 .password("test")
                 .build();
         MockServerRequest request = MockServerRequest.builder()
+                .session(new MockWebSession())
                 .body(Mono.just(userRequest));
         Mono<ServerResponse> login = testContainer.userHandler.login(request);
         StepVerifier.create(login)
@@ -212,6 +216,27 @@ class UserHandlerTest {
         StepVerifier.create(login)
                 .expectError(UnauthorizedException.class)
                 .verify();
+    }
+
+    @Test
+    @DisplayName("session 회원")
+    void session() {
+        TestContainer testContainer = TestContainer.builder().build();
+        UserResponse userResponse = UserResponse.builder()
+                .id(1L)
+                .email("test@test.test")
+                .build();
+        MockWebSession mockWebSession = new MockWebSession();
+        mockWebSession.getAttributes().put("user", userResponse);
+        MockServerRequest request = MockServerRequest.builder()
+                .session(mockWebSession)
+                .build();
+        Mono<ServerResponse> login = testContainer.userHandler.getLoginUser(request);
+        StepVerifier.create(login)
+                .assertNext(response -> {
+                    assertThat(response.statusCode()).isEqualTo(HttpStatus.OK);
+                })
+                .verifyComplete();
     }
 
 }

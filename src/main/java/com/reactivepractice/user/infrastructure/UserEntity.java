@@ -1,6 +1,5 @@
 package com.reactivepractice.user.infrastructure;
 
-import com.reactivepractice.common.PasswordEncoder;
 import com.reactivepractice.user.domain.User;
 import lombok.*;
 import org.springframework.data.annotation.Id;

@@ -1,7 +1,6 @@
 package com.reactivepractice.user.domain;
 
 import com.reactivepractice.common.PasswordEncoder;
-import com.reactivepractice.user.infrastructure.UserEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,4 +22,5 @@ public class User {
                 .password(passwordEncoder.encode(user.getPassword()))
                 .build();
     }
+
 }

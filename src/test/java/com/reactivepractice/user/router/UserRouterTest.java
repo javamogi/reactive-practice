@@ -14,8 +14,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.web.reactive.server.EntityExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -181,4 +183,48 @@ class UserRouterTest {
                     assertThat(ex.getMessage()).isEqualTo(ErrorCode.UNAUTHORIZED.getMessage());
                 });
     }
+
+    @Test
+    @DisplayName("로그인 회원 정보")
+    void getLoginUserInfo() {
+        UserRequest request = UserRequest.builder()
+                .email("test@test.test")
+                .password("test")
+                .build();
+
+        EntityExchangeResult<UserResponse> loginResult = webTestClient
+                .post().uri("/users/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .exchange()
+                .expectStatus().isOk()
+                .expectCookie().exists("SESSION")
+                .expectBody(UserResponse.class)
+                .returnResult();
+
+        String sessionId = loginResult.getResponseHeaders().getFirst(HttpHeaders.SET_COOKIE);
+        sessionId = sessionId.split(";")[0].split("=")[1];
+
+        webTestClient
+                .get().uri("/users/login/info")
+                .accept(MediaType.APPLICATION_JSON)
+                .cookie("SESSION", sessionId)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(UserResponse.class).value(user -> {
+                    assertThat(user.getId()).isEqualTo(1);
+                    assertThat(user.getEmail()).isEqualTo("test@test.test");
+                });
+    }
+
+    @Test
+    @DisplayName("로그인 회원 없음")
+    void notLoginUser() {
+        webTestClient
+                .get().uri("/users/login/info")
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isUnauthorized();
+    }
+
 }

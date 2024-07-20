@@ -80,6 +80,7 @@ public class UserHandler {
                 .flatMap(user ->
                     serverRequest.session()
                             .flatMap(webSession -> {
+//                                webSession.invalidate();
                                 webSession.getAttributes().remove("user");
                                 return ServerResponse.ok().build();
                             }));

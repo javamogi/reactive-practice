@@ -227,4 +227,49 @@ class UserRouterTest {
                 .expectStatus().isUnauthorized();
     }
 
+    @Test
+    @DisplayName("로그아웃")
+    void logout() {
+        UserRequest request = UserRequest.builder()
+                .email("test@test.test")
+                .password("test")
+                .build();
+
+        EntityExchangeResult<UserResponse> loginResult = webTestClient
+                .post().uri("/users/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .exchange()
+                .expectStatus().isOk()
+                .expectCookie().exists("SESSION")
+                .expectBody(UserResponse.class)
+                .returnResult();
+
+        String sessionId = loginResult.getResponseHeaders().getFirst(HttpHeaders.SET_COOKIE);
+        sessionId = sessionId.split(";")[0].split("=")[1];
+
+        webTestClient
+                .get().uri("/users/logout")
+                .accept(MediaType.APPLICATION_JSON)
+                .cookie("SESSION", sessionId)
+                .exchange()
+                .expectStatus().isOk();
+
+        webTestClient
+                .get().uri("/users/login/info")
+                .accept(MediaType.APPLICATION_JSON)
+                .cookie("SESSION", sessionId)
+                .exchange()
+                .expectStatus().isUnauthorized();
+    }
+
+    @Test
+    @DisplayName("삭제할 session 없음")
+    void logoutWhenEmptySession() {
+        webTestClient
+                .get().uri("/users/logout")
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
 }

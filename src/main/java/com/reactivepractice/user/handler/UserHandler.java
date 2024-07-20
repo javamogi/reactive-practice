@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Mono;
 
 
@@ -70,6 +71,18 @@ public class UserHandler {
                 .onErrorResume(NullPointerException.class, throwable -> Mono.error(new UnauthorizedException()))
                 .flatMap(user -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
                                 .body(BodyInserters.fromValue(user)));
+    }
+
+    public Mono<ServerResponse> logout(ServerRequest serverRequest){
+        return serverRequest.session()
+                .flatMap(webSession -> Mono.just((UserResponse) webSession.getAttribute("user")))
+                .onErrorResume(NullPointerException.class, throwable -> Mono.error(new BadRequestException()))
+                .flatMap(user ->
+                    serverRequest.session()
+                            .flatMap(webSession -> {
+                                webSession.getAttributes().remove("user");
+                                return ServerResponse.ok().build();
+                            }));
     }
 
 }

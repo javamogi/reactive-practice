@@ -27,11 +27,12 @@ public class UserRouter {
                 .path("/users", builder -> builder
                         .nest(accept(MediaType.APPLICATION_JSON), builder2 -> builder2
                         .POST("", userHandler::register)
-                        .GET("", userHandler::getAll))
+                        .GET("", userHandler::getAll)
                         .GET("/search", userHandler::getUserByEmail)
-                        .GET("/{id}", userHandler::getUserById)
                         .POST("/login", userHandler::login)
+                        .GET("/logout", userHandler::logout)
                         .GET("/login/info", userHandler::getLoginUser)
+                        .GET("/{id}", userHandler::getUserById))
                 )
                 .filter((request, next) -> next.handle(request)
                         .onErrorResume(CustomBaseException.class, this::handleGlobalException))

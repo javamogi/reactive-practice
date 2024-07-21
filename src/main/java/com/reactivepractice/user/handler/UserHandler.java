@@ -15,7 +15,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
-import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Mono;
 
 
@@ -31,38 +30,39 @@ public class UserHandler {
         return serverRequest.bodyToMono(UserRequest.class)
                 .flatMap(userService::register)
                 .flatMap(response ->
-                        ServerResponse.status(HttpStatus.CREATED).body(BodyInserters.fromValue(response)));
+                        ServerResponse.status(HttpStatus.CREATED).body(BodyInserters.fromValue(UserResponse.of(response))));
     }
 
     public Mono<ServerResponse> getUserByEmail(ServerRequest serverRequest) {
         return serverRequest.queryParam("email")
                 .filter(email -> !email.isEmpty())
                 .map(email -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
-                        .body(userService.findByEmail(email), UserResponse.class))
+                        .body(userService.findByEmail(email).map(UserResponse::of), UserResponse.class))
                 .orElseGet(() -> Mono.error(new BadRequestException()));
     }
+
 
     public Mono<ServerResponse> getUserById(ServerRequest serverRequest) {
         return Mono.just(serverRequest.pathVariable("id"))
                 .map(Long::parseLong)
                 .onErrorResume(NumberFormatException.class, throwable -> Mono.error(new BadRequestException()))
                 .flatMap(id -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
-                        .body(userService.findById(id), UserResponse.class)
+                        .body(userService.findById(id).map(UserResponse::of), UserResponse.class)
                         .switchIfEmpty(Mono.error(new BadRequestException())));
     }
 
     public Mono<ServerResponse> getAll(ServerRequest serverRequest) {
         return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
-                .body(userService.findAll(), UserResponse.class);
+                .body(userService.findAll().map(UserResponse::of), UserResponse.class);
     }
 
     public Mono<ServerResponse> login(ServerRequest serverRequest){
         return serverRequest.bodyToMono(UserRequest.class)
                 .flatMap(userService::login)
                 .flatMap(user -> serverRequest.session()
-                        .doOnNext(webSession -> webSession.getAttributes().put("user", user))
+                        .doOnNext(webSession -> webSession.getAttributes().put("user", UserResponse.of(user)))
                         .flatMap(webSession -> ServerResponse.status(HttpStatus.OK)
-                                .body(BodyInserters.fromValue(user))));
+                                .body(BodyInserters.fromValue(UserResponse.of(user)))));
     }
 
     public Mono<ServerResponse> getLoginUser(ServerRequest serverRequest){

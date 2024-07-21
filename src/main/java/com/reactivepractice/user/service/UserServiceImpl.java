@@ -5,7 +5,6 @@ import com.reactivepractice.exception.DuplicationException;
 import com.reactivepractice.exception.UnauthorizedException;
 import com.reactivepractice.exception.NotFoundException;
 import com.reactivepractice.user.handler.port.UserService;
-import com.reactivepractice.user.handler.response.UserResponse;
 import com.reactivepractice.user.domain.User;
 import com.reactivepractice.user.domain.UserRequest;
 import com.reactivepractice.user.service.port.UserRepository;
@@ -24,38 +23,33 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public Mono<UserResponse> register(UserRequest request){
+    public Mono<User> register(UserRequest request){
         return userRepository.findByEmail(request.getEmail())
                 .flatMap(user -> Mono.<User>error(new DuplicationException()))
                 .switchIfEmpty(Mono.defer(() -> userRepository.save(User.from(request, passwordEncoder))))
-                .map(UserResponse::of)
                 .cache();
     }
 
     @Override
-    public Mono<UserResponse> findByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .map(UserResponse::of);
+    public Mono<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
     }
 
     @Override
-    public Mono<UserResponse> findById(Long id) {
-        return userRepository.findById(id)
-                .map(UserResponse::of);
+    public Mono<User> findById(Long id) {
+        return userRepository.findById(id);
     }
 
     @Override
-    public Flux<UserResponse> findAll() {
-        return userRepository.findAll()
-                .map(UserResponse::of);
+    public Flux<User> findAll() {
+        return userRepository.findAll();
     }
 
     @Override
-    public Mono<UserResponse> login(UserRequest request){
+    public Mono<User> login(UserRequest request){
         return userRepository.findByEmail(request.getEmail())
                 .switchIfEmpty(Mono.defer(() -> Mono.error(new NotFoundException())))
                 .filter(user -> passwordEncoder.matches(request.getPassword(), user.getPassword()))
-                .map(UserResponse::of)
                 .switchIfEmpty(Mono.defer(() -> Mono.error(new UnauthorizedException())))
                 .cache();
     }

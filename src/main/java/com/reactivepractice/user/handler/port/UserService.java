@@ -1,18 +1,19 @@
 package com.reactivepractice.user.handler.port;
 
+import com.reactivepractice.user.domain.User;
 import com.reactivepractice.user.handler.response.UserResponse;
 import com.reactivepractice.user.domain.UserRequest;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface UserService {
-    Mono<UserResponse> register(UserRequest request);
+    Mono<User> register(UserRequest request);
 
-    Mono<UserResponse> findByEmail(String email);
+    Mono<User> findByEmail(String email);
 
-    Mono<UserResponse> findById(Long id);
+    Mono<User> findById(Long id);
 
-    Flux<UserResponse> findAll();
+    Flux<User> findAll();
 
-    Mono<UserResponse> login(UserRequest request);
+    Mono<User> login(UserRequest request);
 }

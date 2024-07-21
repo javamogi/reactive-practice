@@ -56,7 +56,7 @@ class UserServiceImplTest {
                 .build();
 
         //when
-        Mono<UserResponse> register = userService.register(user);
+        Mono<User> register = userService.register(user);
 
         //then
 //        StepVerifier.create(userService.register(user))
@@ -85,9 +85,9 @@ class UserServiceImplTest {
                 .build();
 
         //when
-        Mono<UserResponse> register = userService.register(user);
-        Mono<UserResponse> register2 = userService.register(user2);
-        List<Mono<UserResponse>> registers = List.of(register, register2);
+        Mono<User> register = userService.register(user);
+        Mono<User> register2 = userService.register(user2);
+        List<Mono<User>> registers = List.of(register, register2);
 
         //then
         StepVerifier.create(Mono.when(registers))
@@ -104,7 +104,7 @@ class UserServiceImplTest {
                 .password("test")
                 .build();
         //when
-        Mono<UserResponse> register = userService.register(user);
+        Mono<User> register = userService.register(user);
 
         //then
         StepVerifier.create(register)
@@ -117,7 +117,7 @@ class UserServiceImplTest {
     void findByEmail(){
         //given
         //when
-        Mono<UserResponse> user = userService.findByEmail("test@test.test");
+        Mono<User> user = userService.findByEmail("test@test.test");
 
         //then
         StepVerifier.create(user)
@@ -133,7 +133,7 @@ class UserServiceImplTest {
     void findByEmailWhenNotFound(){
         //given
         //when
-        Mono<UserResponse> user = userService.findByEmail("test99@test.test");
+        Mono<User> user = userService.findByEmail("test99@test.test");
 
         //then
         StepVerifier.create(user)
@@ -146,7 +146,7 @@ class UserServiceImplTest {
     void findById(){
         //given
         //when
-        Mono<UserResponse> user = userService.findById(1L);
+        Mono<User> user = userService.findById(1L);
 
         //then
         StepVerifier.create(user)
@@ -162,7 +162,7 @@ class UserServiceImplTest {
     void findAll(){
         //given
         //when
-        Flux<UserResponse> users = userService.findAll();
+        Flux<User> users = userService.findAll();
 
         //then
         StepVerifier.create(users)
@@ -181,7 +181,7 @@ class UserServiceImplTest {
                 .build();
 
         //when
-        Mono<UserResponse> register = userService.login(user);
+        Mono<User> register = userService.login(user);
 
         //then
         StepVerifier.create(register)
@@ -202,7 +202,7 @@ class UserServiceImplTest {
                 .build();
 
         //when
-        Mono<UserResponse> register = userService.login(user);
+        Mono<User> register = userService.login(user);
 
         //then
         StepVerifier.create(register)
@@ -220,7 +220,7 @@ class UserServiceImplTest {
                 .build();
 
         //when
-        Mono<UserResponse> register = userService.login(user);
+        Mono<User> register = userService.login(user);
 
         //then
         StepVerifier.create(register)

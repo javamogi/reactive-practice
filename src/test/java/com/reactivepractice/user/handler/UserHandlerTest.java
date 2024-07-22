@@ -5,6 +5,7 @@ import com.reactivepractice.exception.DuplicationException;
 import com.reactivepractice.exception.UnauthorizedException;
 import com.reactivepractice.exception.NotFoundException;
 import com.reactivepractice.mock.TestContainer;
+import com.reactivepractice.user.handler.request.LoginRequest;
 import com.reactivepractice.user.domain.User;
 import com.reactivepractice.user.domain.UserRequest;
 import com.reactivepractice.user.handler.response.UserResponse;
@@ -14,7 +15,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.reactive.function.server.MockServerRequest;
 import org.springframework.mock.web.server.MockWebSession;
 import org.springframework.web.reactive.function.server.ServerResponse;
-import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -167,13 +167,13 @@ class UserHandlerTest {
                 .email("test@test.test")
                 .password("test")
                 .build());
-        UserRequest userRequest = UserRequest.builder()
+        LoginRequest loginRequest = LoginRequest.builder()
                 .email("test@test.test")
                 .password("test")
                 .build();
         MockServerRequest request = MockServerRequest.builder()
                 .session(new MockWebSession())
-                .body(Mono.just(userRequest));
+                .body(Mono.just(loginRequest));
         Mono<ServerResponse> login = testContainer.userHandler.login(request);
         StepVerifier.create(login)
                 .assertNext(response -> {
@@ -186,12 +186,12 @@ class UserHandlerTest {
     @DisplayName("로그인 실패 가입하지 않은 회원")
     void failedLoginWhenNotFoundUser() {
         TestContainer testContainer = TestContainer.builder().build();
-        UserRequest userRequest = UserRequest.builder()
+        LoginRequest loginRequest = LoginRequest.builder()
                 .email("test@test.test")
                 .password("test")
                 .build();
         MockServerRequest request = MockServerRequest.builder()
-                .body(Mono.just(userRequest));
+                .body(Mono.just(loginRequest));
         Mono<ServerResponse> login = testContainer.userHandler.login(request);
         StepVerifier.create(login)
                 .expectError(NotFoundException.class)
@@ -206,12 +206,12 @@ class UserHandlerTest {
                 .email("test@test.test")
                 .password("test")
                 .build());
-        UserRequest userRequest = UserRequest.builder()
+        LoginRequest loginRequest = LoginRequest.builder()
                 .email("test@test.test")
                 .password("test2")
                 .build();
         MockServerRequest request = MockServerRequest.builder()
-                .body(Mono.just(userRequest));
+                .body(Mono.just(loginRequest));
         Mono<ServerResponse> login = testContainer.userHandler.login(request);
         StepVerifier.create(login)
                 .expectError(UnauthorizedException.class)

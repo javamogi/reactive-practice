@@ -5,7 +5,7 @@ import com.reactivepractice.exception.UnauthorizedException;
 import com.reactivepractice.exception.NotFoundException;
 import com.reactivepractice.mock.FakePasswordEncoder;
 import com.reactivepractice.mock.FakeUserRepository;
-import com.reactivepractice.user.handler.response.UserResponse;
+import com.reactivepractice.user.handler.request.LoginRequest;
 import com.reactivepractice.user.domain.User;
 import com.reactivepractice.user.domain.UserRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -38,10 +38,12 @@ class UserServiceImplTest {
         fakeUserRepository.save(User.builder()
                 .email("test@test.test")
                 .password("test")
+                .name("테스트")
                 .build());
         fakeUserRepository.save(User.builder()
                 .email("test2@test.test")
                 .password("test2")
+                .name("테스트2")
                 .build());
     }
 
@@ -53,6 +55,7 @@ class UserServiceImplTest {
         UserRequest user = UserRequest.builder()
                 .email("test3@test.test")
                 .password("test3")
+                .name("테스트3")
                 .build();
 
         //when
@@ -64,6 +67,7 @@ class UserServiceImplTest {
                 .assertNext(u -> {
                     assertThat(u.getId()).isEqualTo(3);
                     assertThat(u.getEmail()).isEqualTo("test3@test.test");
+                    assertThat(u.getName()).isEqualTo("테스트3");
                 })
 //                .expectNextMatches(userResponse -> userResponse.getEmail().equals("test3@test.test"))
                 .verifyComplete();
@@ -77,11 +81,13 @@ class UserServiceImplTest {
         UserRequest user = UserRequest.builder()
                 .email("test3@test.test")
                 .password("test3")
+                .name("테스트3")
                 .build();
 
         UserRequest user2 = UserRequest.builder()
                 .email("test3@test.test")
                 .password("test3")
+                .name("테스트3")
                 .build();
 
         //when
@@ -102,6 +108,7 @@ class UserServiceImplTest {
         UserRequest user = UserRequest.builder()
                 .email("test@test.test")
                 .password("test")
+                .name("테스트")
                 .build();
         //when
         Mono<User> register = userService.register(user);
@@ -124,6 +131,7 @@ class UserServiceImplTest {
                 .assertNext(u -> {
                     assertThat(u.getId()).isEqualTo(1);
                     assertThat(u.getEmail()).isEqualTo("test@test.test");
+                    assertThat(u.getName()).isEqualTo("테스트");
                 })
                 .verifyComplete();
     }
@@ -153,6 +161,7 @@ class UserServiceImplTest {
                 .assertNext(u -> {
                     assertThat(u.getId()).isEqualTo(1);
                     assertThat(u.getEmail()).isEqualTo("test@test.test");
+                    assertThat(u.getName()).isEqualTo("테스트");
                 })
                 .verifyComplete();
     }
@@ -175,7 +184,7 @@ class UserServiceImplTest {
     @DisplayName("로그인")
     void login() {
         //given
-        UserRequest user = UserRequest.builder()
+        LoginRequest user = LoginRequest.builder()
                 .email("test@test.test")
                 .password("test")
                 .build();
@@ -188,6 +197,7 @@ class UserServiceImplTest {
                 .assertNext(u -> {
                     assertThat(u.getId()).isEqualTo(1);
                     assertThat(u.getEmail()).isEqualTo("test@test.test");
+                    assertThat(u.getName()).isEqualTo("테스트");
                 })
                 .verifyComplete();
     }
@@ -196,7 +206,7 @@ class UserServiceImplTest {
     @DisplayName("로그인 실패 가입회원 없음")
     void failedLoginWhenNotFoundUser() {
         //given
-        UserRequest user = UserRequest.builder()
+        LoginRequest user = LoginRequest.builder()
                 .email("test99@test.test")
                 .password("test")
                 .build();
@@ -214,7 +224,7 @@ class UserServiceImplTest {
     @DisplayName("로그인 실패 비밀번호 틀림")
     void failedLoginWhenNotMatchingPassword() {
         //given
-        UserRequest user = UserRequest.builder()
+        LoginRequest user = LoginRequest.builder()
                 .email("test@test.test")
                 .password("password")
                 .build();

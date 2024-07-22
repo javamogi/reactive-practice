@@ -4,6 +4,7 @@ import com.reactivepractice.common.PasswordEncoder;
 import com.reactivepractice.exception.DuplicationException;
 import com.reactivepractice.exception.UnauthorizedException;
 import com.reactivepractice.exception.NotFoundException;
+import com.reactivepractice.user.handler.request.LoginRequest;
 import com.reactivepractice.user.handler.port.UserService;
 import com.reactivepractice.user.domain.User;
 import com.reactivepractice.user.domain.UserRequest;
@@ -46,7 +47,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Mono<User> login(UserRequest request){
+    public Mono<User> login(LoginRequest request){
         return userRepository.findByEmail(request.getEmail())
                 .switchIfEmpty(Mono.defer(() -> Mono.error(new NotFoundException())))
                 .filter(user -> passwordEncoder.matches(request.getPassword(), user.getPassword()))

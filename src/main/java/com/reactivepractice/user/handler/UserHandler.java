@@ -2,7 +2,7 @@ package com.reactivepractice.user.handler;
 
 import com.reactivepractice.exception.BadRequestException;
 import com.reactivepractice.exception.UnauthorizedException;
-import com.reactivepractice.user.domain.User;
+import com.reactivepractice.user.handler.request.LoginRequest;
 import com.reactivepractice.user.handler.port.UserService;
 import com.reactivepractice.user.handler.response.UserResponse;
 import com.reactivepractice.user.domain.UserRequest;
@@ -57,7 +57,7 @@ public class UserHandler {
     }
 
     public Mono<ServerResponse> login(ServerRequest serverRequest){
-        return serverRequest.bodyToMono(UserRequest.class)
+        return serverRequest.bodyToMono(LoginRequest.class)
                 .flatMap(userService::login)
                 .flatMap(user -> serverRequest.session()
                         .doOnNext(webSession -> webSession.getAttributes().put("user", UserResponse.of(user)))

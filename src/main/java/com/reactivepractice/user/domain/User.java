@@ -14,12 +14,14 @@ public class User {
     private Long id;
     private String email;
     private String password;
+    private String name;
 
     public static User from(UserRequest user, PasswordEncoder passwordEncoder) {
         return User.builder()
                 .id(user.getId())
                 .email(user.getEmail())
                 .password(passwordEncoder.encode(user.getPassword()))
+                .name(user.getName())
                 .build();
     }
 

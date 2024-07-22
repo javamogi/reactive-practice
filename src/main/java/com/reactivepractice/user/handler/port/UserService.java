@@ -1,7 +1,7 @@
 package com.reactivepractice.user.handler.port;
 
+import com.reactivepractice.user.handler.request.LoginRequest;
 import com.reactivepractice.user.domain.User;
-import com.reactivepractice.user.handler.response.UserResponse;
 import com.reactivepractice.user.domain.UserRequest;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -15,5 +15,5 @@ public interface UserService {
 
     Flux<User> findAll();
 
-    Mono<User> login(UserRequest request);
+    Mono<User> login(LoginRequest request);
 }

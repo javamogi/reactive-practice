@@ -17,12 +17,14 @@ public class UserEntity {
     private Long id;
     private String email;
     private String password;
+    private String name;
 
     public static UserEntity from(User user) {
         return UserEntity.builder()
                 .id(user.getId())
                 .email(user.getEmail())
                 .password(user.getPassword())
+                .name(user.getName())
                 .build();
     }
 
@@ -31,6 +33,7 @@ public class UserEntity {
                 .id(id)
                 .email(email)
                 .password(password)
+                .name(name)
                 .build();
     }
 }

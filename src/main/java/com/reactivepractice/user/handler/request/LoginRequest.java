@@ -1,4 +1,4 @@
-package com.reactivepractice.user.domain;
+package com.reactivepractice.user.handler.request;
 
 import lombok.*;
 
@@ -7,9 +7,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 @ToString
-public class UserRequest {
-    private Long id;
+public class LoginRequest {
     private String email;
     private String password;
-    private String name;
 }

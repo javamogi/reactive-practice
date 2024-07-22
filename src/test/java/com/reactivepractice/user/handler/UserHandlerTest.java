@@ -1,9 +1,6 @@
 package com.reactivepractice.user.handler;
 
-import com.reactivepractice.exception.BadRequestException;
-import com.reactivepractice.exception.DuplicationException;
-import com.reactivepractice.exception.UnauthorizedException;
-import com.reactivepractice.exception.NotFoundException;
+import com.reactivepractice.exception.*;
 import com.reactivepractice.mock.TestContainer;
 import com.reactivepractice.user.handler.request.LoginRequest;
 import com.reactivepractice.user.domain.User;
@@ -29,6 +26,7 @@ class UserHandlerTest {
         UserRequest userRequest = UserRequest.builder()
                 .email("test@test.test")
                 .password("test")
+                .name("테스트")
                 .build();
         MockServerRequest request = MockServerRequest.builder()
                 .body(Mono.just(userRequest));
@@ -52,6 +50,7 @@ class UserHandlerTest {
         UserRequest userRequest = UserRequest.builder()
                 .email("test@test.test")
                 .password("test")
+                .name("테스트")
                 .build();
         MockServerRequest request = MockServerRequest.builder()
                 .body(Mono.just(userRequest));
@@ -237,6 +236,98 @@ class UserHandlerTest {
                     assertThat(response.statusCode()).isEqualTo(HttpStatus.OK);
                 })
                 .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("session 회원 없음")
+    void emptySession() {
+        TestContainer testContainer = TestContainer.builder().build();
+        MockServerRequest request = MockServerRequest.builder()
+                .build();
+        Mono<ServerResponse> login = testContainer.userHandler.getLoginUser(request);
+        StepVerifier.create(login)
+                .expectError(UnauthorizedException.class)
+                .verify();
+    }
+
+    @Test
+    @DisplayName("회원 정보 수정")
+    void modify() {
+        TestContainer testContainer = TestContainer.builder().build();
+        testContainer.userRepository.save(User.builder()
+                .email("test@test.test")
+                .password("test")
+                .build());
+        UserRequest userRequest = UserRequest.builder()
+                .id(1L)
+                .email("test@test.test")
+                .password("password")
+                .name("이름수정")
+                .build();
+        UserResponse userResponse = UserResponse.builder()
+                .id(1L)
+                .email("test@test.test")
+                .name("테스트")
+                .build();
+        MockWebSession mockWebSession = new MockWebSession();
+        mockWebSession.getAttributes().put("user", userResponse);
+        MockServerRequest request = MockServerRequest.builder()
+                .session(mockWebSession)
+                .body(Mono.just(userRequest));
+        Mono<ServerResponse> modified = testContainer.userHandler.modify(request);
+        StepVerifier.create(modified)
+                .assertNext(response -> {
+                    assertThat(response.statusCode()).isEqualTo(HttpStatus.OK);
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("로그인한 회원이 없으면 회원 정보를 수정할 수 없다.")
+    void failedModifyWhenNotEmptyLoginUser() {
+        TestContainer testContainer = TestContainer.builder().build();
+        UserRequest userRequest = UserRequest.builder()
+                .id(1L)
+                .email("test@test.test")
+                .password("password")
+                .name("이름수정")
+                .build();
+        MockServerRequest request = MockServerRequest.builder()
+                .body(Mono.just(userRequest));
+        Mono<ServerResponse> modified = testContainer.userHandler.modify(request);
+        StepVerifier.create(modified)
+                .expectError(UnauthorizedException.class)
+                .verify();
+    }
+
+    @Test
+    @DisplayName("로그인한 회원과 수정 요청 회원이 다른 회원이라면 수정할 수 없다.")
+    void failedModifyWhenNotMatchUser() {
+        TestContainer testContainer = TestContainer.builder().build();
+        testContainer.userRepository.save(User.builder()
+                .email("test@test.test")
+                .password("test")
+                .build());
+        UserRequest userRequest = UserRequest.builder()
+                .id(1L)
+                .email("test@test.test")
+                .password("password")
+                .name("이름수정")
+                .build();
+        UserResponse userResponse = UserResponse.builder()
+                .id(2L)
+                .email("test2@test.test")
+                .name("테스트2")
+                .build();
+        MockWebSession mockWebSession = new MockWebSession();
+        mockWebSession.getAttributes().put("user", userResponse);
+        MockServerRequest request = MockServerRequest.builder()
+                .session(mockWebSession)
+                .body(Mono.just(userRequest));
+        Mono<ServerResponse> modified = testContainer.userHandler.modify(request);
+        StepVerifier.create(modified)
+                .expectError(ForbiddenException.class)
+                .verify();
     }
 
 }

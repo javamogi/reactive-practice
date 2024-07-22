@@ -238,4 +238,28 @@ class UserServiceImplTest {
                 .verify();
     }
 
+    @Test
+    @DisplayName("회원 정보 수정")
+    void modify() {
+        //given
+        UserRequest user = UserRequest.builder()
+                .id(1L)
+                .email("test@test.test")
+                .password("password")
+                .name("이름수정")
+                .build();
+
+        //when
+        Mono<User> register = userService.modify(user);
+
+        //then
+        StepVerifier.create(register)
+                .assertNext(u -> {
+                    assertThat(u.getId()).isEqualTo(1);
+                    assertThat(u.getEmail()).isEqualTo("test@test.test");
+                    assertThat(u.getName()).isEqualTo("이름수정");
+                })
+                .verifyComplete();
+    }
+
 }

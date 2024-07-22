@@ -16,4 +16,6 @@ public interface UserService {
     Flux<User> findAll();
 
     Mono<User> login(LoginRequest request);
+
+    Mono<User> modify(UserRequest request);
 }

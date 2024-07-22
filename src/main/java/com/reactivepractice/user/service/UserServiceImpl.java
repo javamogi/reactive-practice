@@ -55,4 +55,10 @@ public class UserServiceImpl implements UserService {
                 .cache();
     }
 
+    @Override
+    public Mono<User> modify(UserRequest request) {
+        return userRepository.findById(request.getId())
+                .flatMap(user -> userRepository.save(User.from(request, passwordEncoder)));
+    }
+
 }

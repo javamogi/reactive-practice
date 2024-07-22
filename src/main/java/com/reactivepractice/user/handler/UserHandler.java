@@ -1,11 +1,12 @@
 package com.reactivepractice.user.handler;
 
 import com.reactivepractice.exception.BadRequestException;
+import com.reactivepractice.exception.ForbiddenException;
 import com.reactivepractice.exception.UnauthorizedException;
-import com.reactivepractice.user.handler.request.LoginRequest;
-import com.reactivepractice.user.handler.port.UserService;
-import com.reactivepractice.user.handler.response.UserResponse;
 import com.reactivepractice.user.domain.UserRequest;
+import com.reactivepractice.user.handler.port.UserService;
+import com.reactivepractice.user.handler.request.LoginRequest;
+import com.reactivepractice.user.handler.response.UserResponse;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -69,6 +70,7 @@ public class UserHandler {
         return serverRequest.session()
                 .flatMap(webSession -> Mono.just((UserResponse) webSession.getAttribute("user")))
                 .onErrorResume(NullPointerException.class, throwable -> Mono.error(new UnauthorizedException()))
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new UnauthorizedException())))
                 .flatMap(user -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
                                 .body(BodyInserters.fromValue(user)));
     }
@@ -84,6 +86,19 @@ public class UserHandler {
 //                                webSession.getAttributes().remove("user");
                                 return ServerResponse.ok().build();
                             }));
+    }
+
+    public Mono<ServerResponse> modify(ServerRequest serverRequest){
+        return serverRequest.session()
+                .flatMap(webSession -> Mono.just((UserResponse) webSession.getAttribute("user")))
+                .onErrorResume(NullPointerException.class, throwable -> Mono.error(new UnauthorizedException()))
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new UnauthorizedException())))
+                .flatMap(user -> serverRequest.bodyToMono(UserRequest.class)
+                        .filter(request -> user.getId().equals(request.getId()))
+                        .switchIfEmpty(Mono.defer(() -> Mono.error(new ForbiddenException())))
+                        .flatMap(userService::modify))
+                .flatMap(response ->
+                                ServerResponse.ok().body(BodyInserters.fromValue(UserResponse.of(response))));
     }
 
 }

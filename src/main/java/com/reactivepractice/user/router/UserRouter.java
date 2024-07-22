@@ -28,6 +28,7 @@ public class UserRouter {
                         .nest(accept(MediaType.APPLICATION_JSON), builder2 -> builder2
                         .POST("", userHandler::register)
                         .GET("", userHandler::getAll)
+                        .PATCH("", userHandler::modify)
                         .GET("/search", userHandler::getUserByEmail)
                         .POST("/login", userHandler::login)
                         .GET("/logout", userHandler::logout)

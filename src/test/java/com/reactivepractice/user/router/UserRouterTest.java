@@ -36,6 +36,7 @@ class UserRouterTest {
         userRepository.save(User.builder()
                 .email("test@test.test")
                 .password(passwordEncoder.encode("test"))
+                .name("테스트")
                 .build()).subscribe();
     }
 
@@ -67,6 +68,7 @@ class UserRouterTest {
         UserRequest request = UserRequest.builder()
                 .email("test@test.test")
                 .password("test")
+                .name("테스트")
                 .build();
 
         webTestClient
@@ -268,5 +270,102 @@ class UserRouterTest {
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isBadRequest();
+    }
+
+    @Test
+    @DisplayName("회원 정보 수정")
+    void modify() {
+        LoginRequest request = LoginRequest.builder()
+                .email("test@test.test")
+                .password("test")
+                .build();
+
+        EntityExchangeResult<UserResponse> loginResult = webTestClient
+                .post().uri("/users/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .exchange()
+                .expectStatus().isOk()
+                .expectCookie().exists("SESSION")
+                .expectBody(UserResponse.class)
+                .returnResult();
+
+        String sessionId = loginResult.getResponseHeaders().getFirst(HttpHeaders.SET_COOKIE);
+        sessionId = sessionId.split(";")[0].split("=")[1];
+
+        UserRequest userRequest = UserRequest.builder()
+                .id(1L)
+                .email("test@test.test")
+                .password("test")
+                .name("이름수정")
+                .build();
+        webTestClient
+                .patch().uri("/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(userRequest)
+                .accept(MediaType.APPLICATION_JSON)
+                .cookie("SESSION", sessionId)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(UserResponse.class).value(user -> {
+                    assertThat(user.getId()).isEqualTo(1);
+                    assertThat(user.getEmail()).isEqualTo("test@test.test");
+                    assertThat(user.getName()).isEqualTo("이름수정");
+                });
+    }
+
+    @Test
+    @DisplayName("회원 정보 수정 실패 로그인한 회원 없음")
+    void failedModifyWhenEmptyLoginUser() {
+        UserRequest userRequest = UserRequest.builder()
+                .id(1L)
+                .email("test@test.test")
+                .password("test")
+                .name("이름수정")
+                .build();
+        webTestClient
+                .patch().uri("/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(userRequest)
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isUnauthorized();
+    }
+
+    @Test
+    @DisplayName("회원 정보 수정 실패 로그인한 회원과 수정 요청 회원 정보가 다름")
+    void failedModifyWhenNotMatchUser() {
+        LoginRequest request = LoginRequest.builder()
+                .email("test@test.test")
+                .password("test")
+                .build();
+
+        EntityExchangeResult<UserResponse> loginResult = webTestClient
+                .post().uri("/users/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .exchange()
+                .expectStatus().isOk()
+                .expectCookie().exists("SESSION")
+                .expectBody(UserResponse.class)
+                .returnResult();
+
+        String sessionId = loginResult.getResponseHeaders().getFirst(HttpHeaders.SET_COOKIE);
+        sessionId = sessionId.split(";")[0].split("=")[1];
+
+        UserRequest userRequest = UserRequest.builder()
+                .id(2L)
+                .email("test2@test.test")
+                .password("test2")
+                .name("이름수정")
+                .build();
+        webTestClient
+                .patch().uri("/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(userRequest)
+                .accept(MediaType.APPLICATION_JSON)
+                .cookie("SESSION", sessionId)
+                .exchange()
+                .expectStatus().isForbidden();
     }
 }

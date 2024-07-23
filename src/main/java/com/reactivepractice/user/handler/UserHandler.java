@@ -1,5 +1,6 @@
 package com.reactivepractice.user.handler;
 
+import com.reactivepractice.common.SessionUtils;
 import com.reactivepractice.exception.BadRequestException;
 import com.reactivepractice.exception.ForbiddenException;
 import com.reactivepractice.exception.UnauthorizedException;
@@ -59,21 +60,19 @@ public class UserHandler {
         return serverRequest.bodyToMono(LoginRequest.class)
                 .flatMap(userService::login)
                 .flatMap(user -> serverRequest.session()
-                        .doOnNext(webSession -> webSession.getAttributes().put("user", UserResponse.of(user)))
+                        .doOnNext(webSession -> webSession.getAttributes().put(SessionUtils.USER_SESSION_KEY, UserResponse.of(user)))
                         .flatMap(webSession -> ServerResponse.status(HttpStatus.OK)
                                 .body(BodyInserters.fromValue(UserResponse.of(user)))));
     }
 
     public Mono<ServerResponse> getLoginUser(ServerRequest serverRequest){
-        return getSessionUser(serverRequest)
+        return SessionUtils.getLoginUser(serverRequest)
                 .flatMap(user -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
                                 .body(BodyInserters.fromValue(user)));
     }
 
     public Mono<ServerResponse> logout(ServerRequest serverRequest){
-        return serverRequest.session()
-                .flatMap(webSession -> Mono.just((UserResponse) webSession.getAttribute("user")))
-                .onErrorResume(NullPointerException.class, throwable -> Mono.error(new BadRequestException()))
+        return SessionUtils.getLoginUser(serverRequest)
                 .flatMap(user ->
                     serverRequest.session()
                             .flatMap(webSession -> {
@@ -84,7 +83,7 @@ public class UserHandler {
     }
 
     public Mono<ServerResponse> modify(ServerRequest serverRequest){
-        return getSessionUser(serverRequest)
+        return SessionUtils.getLoginUser(serverRequest)
                 .flatMap(user -> serverRequest.bodyToMono(UserRequest.class)
                         .filter(request -> user.getId().equals(request.getId()))
                         .switchIfEmpty(Mono.defer(() -> Mono.error(new ForbiddenException())))
@@ -94,19 +93,12 @@ public class UserHandler {
     }
 
     public Mono<ServerResponse> delete(ServerRequest serverRequest){
-        return getSessionUser(serverRequest)
+        return SessionUtils.getLoginUser(serverRequest)
                 .flatMap(user -> getPathVariableId(serverRequest)
                         .filter(id -> user.getId().equals(id))
                         .switchIfEmpty(Mono.defer(() -> Mono.error(new ForbiddenException())))
                         .flatMap(userService::delete))
                 .then(Mono.defer(() -> ServerResponse.noContent().build()));
-    }
-
-    private Mono<UserResponse> getSessionUser(ServerRequest serverRequest) {
-        return serverRequest.session()
-                .flatMap(webSession -> Mono.just((UserResponse) webSession.getAttribute("user")))
-                .onErrorResume(NullPointerException.class, throwable -> Mono.error(new UnauthorizedException()))
-                .switchIfEmpty(Mono.defer(() -> Mono.error(new UnauthorizedException())));
     }
 
     private Mono<Long> getPathVariableId(ServerRequest serverRequest) {

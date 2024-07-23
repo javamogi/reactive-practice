@@ -274,7 +274,7 @@ class UserRouterTest {
                 .get().uri("/users/logout")
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
-                .expectStatus().isBadRequest();
+                .expectStatus().isUnauthorized();
     }
 
     @Test

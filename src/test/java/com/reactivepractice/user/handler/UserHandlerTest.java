@@ -1,5 +1,6 @@
 package com.reactivepractice.user.handler;
 
+import com.reactivepractice.common.SessionUtils;
 import com.reactivepractice.exception.*;
 import com.reactivepractice.mock.TestContainer;
 import com.reactivepractice.user.handler.request.LoginRequest;
@@ -226,7 +227,7 @@ class UserHandlerTest {
                 .email("test@test.test")
                 .build();
         MockWebSession mockWebSession = new MockWebSession();
-        mockWebSession.getAttributes().put("user", userResponse);
+        mockWebSession.getAttributes().put(SessionUtils.USER_SESSION_KEY, userResponse);
         MockServerRequest request = MockServerRequest.builder()
                 .session(mockWebSession)
                 .build();
@@ -270,7 +271,7 @@ class UserHandlerTest {
                 .name("테스트")
                 .build();
         MockWebSession mockWebSession = new MockWebSession();
-        mockWebSession.getAttributes().put("user", userResponse);
+        mockWebSession.getAttributes().put(SessionUtils.USER_SESSION_KEY, userResponse);
         MockServerRequest request = MockServerRequest.builder()
                 .session(mockWebSession)
                 .body(Mono.just(userRequest));
@@ -320,7 +321,7 @@ class UserHandlerTest {
                 .name("테스트2")
                 .build();
         MockWebSession mockWebSession = new MockWebSession();
-        mockWebSession.getAttributes().put("user", userResponse);
+        mockWebSession.getAttributes().put(SessionUtils.USER_SESSION_KEY, userResponse);
         MockServerRequest request = MockServerRequest.builder()
                 .session(mockWebSession)
                 .body(Mono.just(userRequest));
@@ -344,7 +345,7 @@ class UserHandlerTest {
                 .name("테스트")
                 .build();
         MockWebSession mockWebSession = new MockWebSession();
-        mockWebSession.getAttributes().put("user", userResponse);
+        mockWebSession.getAttributes().put(SessionUtils.USER_SESSION_KEY, userResponse);
         MockServerRequest request = MockServerRequest.builder()
                 .pathVariable("id", "1")
                 .session(mockWebSession)
@@ -388,7 +389,7 @@ class UserHandlerTest {
                 .name("테스트")
                 .build();
         MockWebSession mockWebSession = new MockWebSession();
-        mockWebSession.getAttributes().put("user", userResponse);
+        mockWebSession.getAttributes().put(SessionUtils.USER_SESSION_KEY, userResponse);
         MockServerRequest request = MockServerRequest.builder()
                 .pathVariable("id", "2")
                 .session(mockWebSession)
@@ -413,7 +414,7 @@ class UserHandlerTest {
                 .name("테스트")
                 .build();
         MockWebSession mockWebSession = new MockWebSession();
-        mockWebSession.getAttributes().put("user", userResponse);
+        mockWebSession.getAttributes().put(SessionUtils.USER_SESSION_KEY, userResponse);
         MockServerRequest request = MockServerRequest.builder()
                 .pathVariable("id", "")
                 .session(mockWebSession)

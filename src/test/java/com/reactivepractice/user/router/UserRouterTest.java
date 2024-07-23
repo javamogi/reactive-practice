@@ -9,9 +9,7 @@ import com.reactivepractice.user.domain.User;
 import com.reactivepractice.user.domain.UserRequest;
 import com.reactivepractice.user.handler.response.UserResponse;
 import com.reactivepractice.user.service.port.UserRepository;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,6 +18,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.EntityExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Mono;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -29,6 +28,12 @@ class UserRouterTest {
 
     @Autowired
     WebTestClient webTestClient;
+
+    @Autowired
+    UserRepository userRepository;
+
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
     @BeforeAll
     static void init(@Autowired UserRepository userRepository,
@@ -363,6 +368,121 @@ class UserRouterTest {
                 .patch().uri("/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(userRequest)
+                .accept(MediaType.APPLICATION_JSON)
+                .cookie("SESSION", sessionId)
+                .exchange()
+                .expectStatus().isForbidden();
+    }
+
+    @Test
+    @DisplayName("회원 삭제")
+    void delete() {
+
+        Long id = userRepository.save(User.builder()
+                .email("test10@test.test")
+                .password(passwordEncoder.encode("test10"))
+                .name("테스트10")
+                .build())
+                .map(User::getId).block();
+
+        LoginRequest request = LoginRequest.builder()
+                .email("test10@test.test")
+                .password("test10")
+                .build();
+
+        EntityExchangeResult<UserResponse> loginResult = webTestClient
+                .post().uri("/users/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .exchange()
+                .expectStatus().isOk()
+                .expectCookie().exists("SESSION")
+                .expectBody(UserResponse.class)
+                .returnResult();
+
+        String sessionId = loginResult.getResponseHeaders().getFirst(HttpHeaders.SET_COOKIE);
+        sessionId = sessionId.split(";")[0].split("=")[1];
+
+        webTestClient
+                .delete().uri(uriBuilder -> uriBuilder
+                        .path("/users/{id}")
+                        .build(id))
+                .accept(MediaType.APPLICATION_JSON)
+                .cookie("SESSION", sessionId)
+                .exchange()
+                .expectStatus().isNoContent();
+    }
+
+    @Test
+    @DisplayName("회원 삭제 실패 로그인한 회원 없음")
+    void failedDeleteWhenEmptyLoginUser() {
+        long id = 1;
+        webTestClient
+                .delete().uri(uriBuilder -> uriBuilder
+                        .path("/users/{id}")
+                        .build(id))
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isUnauthorized();
+    }
+
+    @Test
+    @DisplayName("회원 삭제 실패 잘못된 path variable 형식")
+    void failedDeleteWhenBadRequest() {
+        LoginRequest request = LoginRequest.builder()
+                .email("test@test.test")
+                .password("test")
+                .build();
+
+        EntityExchangeResult<UserResponse> loginResult = webTestClient
+                .post().uri("/users/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .exchange()
+                .expectStatus().isOk()
+                .expectCookie().exists("SESSION")
+                .expectBody(UserResponse.class)
+                .returnResult();
+
+        String sessionId = loginResult.getResponseHeaders().getFirst(HttpHeaders.SET_COOKIE);
+        sessionId = sessionId.split(";")[0].split("=")[1];
+
+        webTestClient
+                .delete().uri(uriBuilder -> uriBuilder
+                        .path("/users/{id}")
+                        .build("a"))
+                .accept(MediaType.APPLICATION_JSON)
+                .cookie("SESSION", sessionId)
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
+
+    @Test
+    @DisplayName("회원 삭제 실패 권한 없음")
+    void failedDeleteWhenNotMatchUser() {
+        LoginRequest request = LoginRequest.builder()
+                .email("test@test.test")
+                .password("test")
+                .build();
+
+        EntityExchangeResult<UserResponse> loginResult = webTestClient
+                .post().uri("/users/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .exchange()
+                .expectStatus().isOk()
+                .expectCookie().exists("SESSION")
+                .expectBody(UserResponse.class)
+                .returnResult();
+
+        String sessionId = loginResult.getResponseHeaders().getFirst(HttpHeaders.SET_COOKIE);
+        sessionId = sessionId.split(";")[0].split("=")[1];
+
+        long id = 2;
+        webTestClient
+                .delete().uri(uriBuilder -> uriBuilder
+                        .path("/users/{id}")
+                        .build(id))
                 .accept(MediaType.APPLICATION_JSON)
                 .cookie("SESSION", sessionId)
                 .exchange()

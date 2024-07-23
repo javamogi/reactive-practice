@@ -33,6 +33,7 @@ public class UserRouter {
                         .POST("/login", userHandler::login)
                         .GET("/logout", userHandler::logout)
                         .GET("/login/info", userHandler::getLoginUser)
+                        .DELETE("/{id}", userHandler::delete)
                         .GET("/{id}", userHandler::getUserById))
                 )
                 .filter((request, next) -> next.handle(request)

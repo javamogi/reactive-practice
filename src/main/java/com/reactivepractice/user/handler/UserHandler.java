@@ -101,4 +101,18 @@ public class UserHandler {
                                 ServerResponse.ok().body(BodyInserters.fromValue(UserResponse.of(response))));
     }
 
+    public Mono<ServerResponse> delete(ServerRequest serverRequest){
+        return serverRequest.session()
+                .flatMap(webSession -> Mono.just((UserResponse) webSession.getAttribute("user")))
+                .onErrorResume(NullPointerException.class, throwable -> Mono.error(new UnauthorizedException()))
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new UnauthorizedException())))
+                .flatMap(user -> Mono.just(serverRequest.pathVariable("id"))
+                        .map(Long::parseLong)
+                        .onErrorResume(NumberFormatException.class, throwable -> Mono.error(new BadRequestException()))
+                        .filter(id -> user.getId().equals(id))
+                        .switchIfEmpty(Mono.defer(() -> Mono.error(new ForbiddenException())))
+                        .flatMap(userService::delete))
+                .then(Mono.defer(() -> ServerResponse.noContent().build()));
+    }
+
 }

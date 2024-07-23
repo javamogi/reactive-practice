@@ -61,4 +61,11 @@ public class UserServiceImpl implements UserService {
                 .flatMap(user -> userRepository.save(User.from(request, passwordEncoder)));
     }
 
+    @Override
+    public Mono<Void> delete(Long id) {
+        return userRepository.findById(id)
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new NotFoundException())))
+                .flatMap(user -> userRepository.deleteById(user.getId()));
+    }
+
 }

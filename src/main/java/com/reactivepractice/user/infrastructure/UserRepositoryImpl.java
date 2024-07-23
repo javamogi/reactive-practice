@@ -36,4 +36,9 @@ public class UserRepositoryImpl implements UserRepository {
         return userReactiveRepository.findAll()
                 .flatMap(user -> Mono.just(user.toModel()));
     }
+
+    @Override
+    public Mono<Void> deleteById(Long id) {
+        return userReactiveRepository.deleteById(id);
+    }
 }

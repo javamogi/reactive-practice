@@ -330,4 +330,98 @@ class UserHandlerTest {
                 .verify();
     }
 
+    @Test
+    @DisplayName("회원 삭제")
+    void delete() {
+        TestContainer testContainer = TestContainer.builder().build();
+        testContainer.userRepository.save(User.builder()
+                .email("test@test.test")
+                .password("test")
+                .build());
+        UserResponse userResponse = UserResponse.builder()
+                .id(1L)
+                .email("test@test.test")
+                .name("테스트")
+                .build();
+        MockWebSession mockWebSession = new MockWebSession();
+        mockWebSession.getAttributes().put("user", userResponse);
+        MockServerRequest request = MockServerRequest.builder()
+                .pathVariable("id", "1")
+                .session(mockWebSession)
+                .build();
+        Mono<ServerResponse> deleted = testContainer.userHandler.delete(request);
+        StepVerifier.create(deleted)
+                .assertNext(response -> {
+                    assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("회원 삭제 실패 로그인 회원 없음")
+    void failedDeleteWhenNotLogin() {
+        TestContainer testContainer = TestContainer.builder().build();
+        testContainer.userRepository.save(User.builder()
+                .email("test@test.test")
+                .password("test")
+                .build());
+        MockServerRequest request = MockServerRequest.builder()
+                .pathVariable("id", "1")
+                .build();
+        Mono<ServerResponse> deleted = testContainer.userHandler.delete(request);
+        StepVerifier.create(deleted)
+                .expectError(UnauthorizedException.class)
+                .verify();
+    }
+
+    @Test
+    @DisplayName("회원 삭제 실패 권한 없음")
+    void failedDeleteNotMatchUser() {
+        TestContainer testContainer = TestContainer.builder().build();
+        testContainer.userRepository.save(User.builder()
+                .email("test@test.test")
+                .password("test")
+                .build());
+        UserResponse userResponse = UserResponse.builder()
+                .id(1L)
+                .email("test@test.test")
+                .name("테스트")
+                .build();
+        MockWebSession mockWebSession = new MockWebSession();
+        mockWebSession.getAttributes().put("user", userResponse);
+        MockServerRequest request = MockServerRequest.builder()
+                .pathVariable("id", "2")
+                .session(mockWebSession)
+                .build();
+        Mono<ServerResponse> deleted = testContainer.userHandler.delete(request);
+        StepVerifier.create(deleted)
+                .expectError(ForbiddenException.class)
+                .verify();
+    }
+
+    @Test
+    @DisplayName("회원 삭제 실패 잘못된 파라미터")
+    void failedDeleteWhenBadRequest() {
+        TestContainer testContainer = TestContainer.builder().build();
+        testContainer.userRepository.save(User.builder()
+                .email("test@test.test")
+                .password("test")
+                .build());
+        UserResponse userResponse = UserResponse.builder()
+                .id(1L)
+                .email("test@test.test")
+                .name("테스트")
+                .build();
+        MockWebSession mockWebSession = new MockWebSession();
+        mockWebSession.getAttributes().put("user", userResponse);
+        MockServerRequest request = MockServerRequest.builder()
+                .pathVariable("id", "")
+                .session(mockWebSession)
+                .build();
+        Mono<ServerResponse> deleted = testContainer.userHandler.delete(request);
+        StepVerifier.create(deleted)
+                .expectError(BadRequestException.class)
+                .verify();
+    }
+
 }

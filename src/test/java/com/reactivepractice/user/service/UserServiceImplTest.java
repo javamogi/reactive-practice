@@ -262,4 +262,33 @@ class UserServiceImplTest {
                 .verifyComplete();
     }
 
+    @Test
+    @DisplayName("회원 삭제")
+    void delete() {
+        //given
+        long id = 1;
+
+        //when
+        Mono<Void> register = userService.delete(id);
+
+        //then
+        StepVerifier.create(register)
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("회원 삭제 실패")
+    void failedDeleteWhenNotFound() {
+        //given
+        long id = 99;
+
+        //when
+        Mono<Void> register = userService.delete(id);
+
+        //then
+        StepVerifier.create(register)
+                .expectError(NotFoundException.class)
+                .verify();
+    }
+
 }

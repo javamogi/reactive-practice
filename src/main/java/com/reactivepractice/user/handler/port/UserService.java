@@ -18,4 +18,6 @@ public interface UserService {
     Mono<User> login(LoginRequest request);
 
     Mono<User> modify(UserRequest request);
+
+    Mono<Void> delete(Long id);
 }

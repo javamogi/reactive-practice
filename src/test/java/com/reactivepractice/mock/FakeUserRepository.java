@@ -8,6 +8,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -52,5 +53,14 @@ public class FakeUserRepository implements UserRepository {
     @Override
     public Flux<User> findAll() {
         return Flux.fromIterable(data);
+    }
+
+    @Override
+    public Mono<Void> deleteById(Long id) {
+        if(data.removeIf(u -> Objects.equals(u.getId(), id))) {
+            return Mono.empty();
+        } else {
+            throw new NoSuchElementException();
+        }
     }
 }

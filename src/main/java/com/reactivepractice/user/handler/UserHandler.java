@@ -44,9 +44,7 @@ public class UserHandler {
 
 
     public Mono<ServerResponse> getUserById(ServerRequest serverRequest) {
-        return Mono.just(serverRequest.pathVariable("id"))
-                .map(Long::parseLong)
-                .onErrorResume(NumberFormatException.class, throwable -> Mono.error(new BadRequestException()))
+        return getPathVariableId(serverRequest)
                 .flatMap(id -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
                         .body(userService.findById(id).map(UserResponse::of), UserResponse.class)
                         .switchIfEmpty(Mono.error(new BadRequestException())));
@@ -67,10 +65,7 @@ public class UserHandler {
     }
 
     public Mono<ServerResponse> getLoginUser(ServerRequest serverRequest){
-        return serverRequest.session()
-                .flatMap(webSession -> Mono.just((UserResponse) webSession.getAttribute("user")))
-                .onErrorResume(NullPointerException.class, throwable -> Mono.error(new UnauthorizedException()))
-                .switchIfEmpty(Mono.defer(() -> Mono.error(new UnauthorizedException())))
+        return getSessionUser(serverRequest)
                 .flatMap(user -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
                                 .body(BodyInserters.fromValue(user)));
     }
@@ -89,10 +84,7 @@ public class UserHandler {
     }
 
     public Mono<ServerResponse> modify(ServerRequest serverRequest){
-        return serverRequest.session()
-                .flatMap(webSession -> Mono.just((UserResponse) webSession.getAttribute("user")))
-                .onErrorResume(NullPointerException.class, throwable -> Mono.error(new UnauthorizedException()))
-                .switchIfEmpty(Mono.defer(() -> Mono.error(new UnauthorizedException())))
+        return getSessionUser(serverRequest)
                 .flatMap(user -> serverRequest.bodyToMono(UserRequest.class)
                         .filter(request -> user.getId().equals(request.getId()))
                         .switchIfEmpty(Mono.defer(() -> Mono.error(new ForbiddenException())))
@@ -102,17 +94,25 @@ public class UserHandler {
     }
 
     public Mono<ServerResponse> delete(ServerRequest serverRequest){
-        return serverRequest.session()
-                .flatMap(webSession -> Mono.just((UserResponse) webSession.getAttribute("user")))
-                .onErrorResume(NullPointerException.class, throwable -> Mono.error(new UnauthorizedException()))
-                .switchIfEmpty(Mono.defer(() -> Mono.error(new UnauthorizedException())))
-                .flatMap(user -> Mono.just(serverRequest.pathVariable("id"))
-                        .map(Long::parseLong)
-                        .onErrorResume(NumberFormatException.class, throwable -> Mono.error(new BadRequestException()))
+        return getSessionUser(serverRequest)
+                .flatMap(user -> getPathVariableId(serverRequest)
                         .filter(id -> user.getId().equals(id))
                         .switchIfEmpty(Mono.defer(() -> Mono.error(new ForbiddenException())))
                         .flatMap(userService::delete))
                 .then(Mono.defer(() -> ServerResponse.noContent().build()));
+    }
+
+    private Mono<UserResponse> getSessionUser(ServerRequest serverRequest) {
+        return serverRequest.session()
+                .flatMap(webSession -> Mono.just((UserResponse) webSession.getAttribute("user")))
+                .onErrorResume(NullPointerException.class, throwable -> Mono.error(new UnauthorizedException()))
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new UnauthorizedException())));
+    }
+
+    private Mono<Long> getPathVariableId(ServerRequest serverRequest) {
+        return Mono.just(serverRequest.pathVariable("id"))
+                .map(Long::parseLong)
+                .onErrorResume(NumberFormatException.class, throwable -> Mono.error(new BadRequestException()));
     }
 
 }

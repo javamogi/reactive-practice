@@ -5,3 +5,12 @@ create table if not exists users (
     name varchar(50) not null,
     primary key (id)
 );
+create table if not exists posts (
+    id bigint not null auto_increment,
+    user_id bigint not null,
+    title varchar(100) not null,
+    contents varchar(100) not null,
+    primary key (id),
+    constraint post_writer_fk FOREIGN KEY (user_id)
+        REFERENCES users (id)
+);

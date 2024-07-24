@@ -37,6 +37,7 @@ public class PostEntity {
     public Post toModel() {
         return Post.builder()
                 .id(id)
+                .user(User.builder().id(userId).build())
                 .title(title)
                 .contents(contents)
                 .build();

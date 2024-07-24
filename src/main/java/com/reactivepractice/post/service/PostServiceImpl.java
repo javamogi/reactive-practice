@@ -28,4 +28,12 @@ public class PostServiceImpl implements PostService {
                 )
                 .switchIfEmpty(Mono.error(new NotFoundException()));
     }
+
+    @Override
+    public Mono<Post> getPost(Long postId) {
+        return postRepository.findById(postId)
+                .flatMap(p -> userRepository.findById(p.getUser().getId())
+                                .map(p::from))
+                .switchIfEmpty(Mono.error(new NotFoundException()));
+    }
 }

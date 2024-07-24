@@ -30,6 +30,7 @@ class PostServiceImplTest {
         fakeUserRepository.save(User.builder()
                 .email("test@test.test")
                 .password("test")
+                .name("테스트")
                 .build());
         fakePostRepository.save(Post.builder()
                         .user(User.builder().id(1L).build())
@@ -76,6 +77,43 @@ class PostServiceImplTest {
 
         //then
         StepVerifier.create(register)
+                .expectError(NotFoundException.class)
+                .verify();
+    }
+
+    @Test
+    @DisplayName("게시글 ID로 조회")
+    void findById(){
+        //given
+        long postId = 1;
+
+        //when
+        Mono<Post> postMono = postService.getPost(postId);
+
+        //then
+        StepVerifier.create(postMono)
+                .assertNext(p -> {
+                    assertThat(p.getId()).isEqualTo(1);
+                    assertThat(p.getTitle()).isEqualTo("제목");
+                    assertThat(p.getContents()).isEqualTo("내용");
+                    assertThat(p.getUser().getId()).isEqualTo(1);
+                    assertThat(p.getUser().getEmail()).isEqualTo("test@test.test");
+                    assertThat(p.getUser().getName()).isEqualTo("테스트");
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("게시글 ID로 조회 게시글 없음")
+    void findByIdWhenEmptyPost(){
+        //given
+        long postId = 99;
+
+        //when
+        Mono<Post> postMono = postService.getPost(postId);
+
+        //then
+        StepVerifier.create(postMono)
                 .expectError(NotFoundException.class)
                 .verify();
     }

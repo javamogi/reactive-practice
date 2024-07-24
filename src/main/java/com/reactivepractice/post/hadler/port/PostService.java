@@ -6,4 +6,5 @@ import reactor.core.publisher.Mono;
 
 public interface PostService {
     Mono<Post> register(PostRequest request, Long userId);
+    Mono<Post> getPost(Long postId);
 }

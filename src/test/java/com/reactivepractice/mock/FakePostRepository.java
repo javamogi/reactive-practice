@@ -2,6 +2,7 @@ package com.reactivepractice.mock;
 
 import com.reactivepractice.post.doamin.Post;
 import com.reactivepractice.post.service.port.PostRepository;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
@@ -30,6 +31,13 @@ public class FakePostRepository implements PostRepository {
             data.add(post);
             return Mono.just(post);
         }
+    }
+
+    @Override
+    public Mono<Post> findById(Long id) {
+        return Flux.fromIterable(data)
+                .filter(post -> post.getId().equals(id))
+                .next();
     }
 
     @Override

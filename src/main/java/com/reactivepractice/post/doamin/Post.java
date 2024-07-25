@@ -1,15 +1,14 @@
 package com.reactivepractice.post.doamin;
 
 import com.reactivepractice.user.domain.User;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import io.r2dbc.spi.Readable;
 
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString
 public class Post {
 
     private Long id;
@@ -35,6 +34,19 @@ public class Post {
                 .user(user)
                 .title(title)
                 .contents(contents)
+                .build();
+    }
+
+    public static Post from(Readable row){
+        return Post.builder()
+                .id((Long) row.get("id"))
+                .title((String) row.get("title"))
+                .contents((String) row.get("contents"))
+                .user(User.builder()
+                        .id((Long) row.get("user_id"))
+                        .email((String) row.get("email"))
+                        .name((String) row.get("name"))
+                        .build())
                 .build();
     }
 

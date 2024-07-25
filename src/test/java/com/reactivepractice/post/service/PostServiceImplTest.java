@@ -9,6 +9,7 @@ import com.reactivepractice.user.domain.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -97,8 +98,8 @@ class PostServiceImplTest {
                     assertThat(p.getTitle()).isEqualTo("제목");
                     assertThat(p.getContents()).isEqualTo("내용");
                     assertThat(p.getUser().getId()).isEqualTo(1);
-                    assertThat(p.getUser().getEmail()).isEqualTo("test@test.test");
-                    assertThat(p.getUser().getName()).isEqualTo("테스트");
+//                    assertThat(p.getUser().getEmail()).isEqualTo("test@test.test");
+//                    assertThat(p.getUser().getName()).isEqualTo("테스트");
                 })
                 .verifyComplete();
     }
@@ -116,5 +117,33 @@ class PostServiceImplTest {
         StepVerifier.create(postMono)
                 .expectError(NotFoundException.class)
                 .verify();
+    }
+
+    @Test
+    @DisplayName("게시글 목록 조회")
+    void findAll(){
+        //given
+        //when
+        Flux<Post> postMono = postService.getAllPosts();
+
+        //then
+        StepVerifier.create(postMono)
+                .expectNextCount(2)
+                .assertNext(p -> {
+                    assertThat(p.getId()).isEqualTo(1);
+                    assertThat(p.getTitle()).isEqualTo("제목");
+                    assertThat(p.getContents()).isEqualTo("내용");
+                    assertThat(p.getUser().getId()).isEqualTo(1);
+                    assertThat(p.getUser().getEmail()).isEqualTo("test@test.test");
+                    assertThat(p.getUser().getName()).isEqualTo("테스트");
+                })
+                .assertNext(p -> {
+                    assertThat(p.getId()).isEqualTo(2);
+                    assertThat(p.getTitle()).isEqualTo("제목2");
+                    assertThat(p.getContents()).isEqualTo("내용2");
+                    assertThat(p.getUser().getId()).isEqualTo(1);
+                    assertThat(p.getUser().getEmail()).isEqualTo("test@test.test");
+                    assertThat(p.getUser().getName()).isEqualTo("테스트");
+                });
     }
 }

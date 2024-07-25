@@ -9,6 +9,7 @@ import com.reactivepractice.user.service.port.UserRepository;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -32,8 +33,11 @@ public class PostServiceImpl implements PostService {
     @Override
     public Mono<Post> getPost(Long postId) {
         return postRepository.findById(postId)
-                .flatMap(p -> userRepository.findById(p.getUser().getId())
-                                .map(p::from))
                 .switchIfEmpty(Mono.error(new NotFoundException()));
+    }
+
+    @Override
+    public Flux<Post> getAllPosts() {
+        return postRepository.findAll();
     }
 }

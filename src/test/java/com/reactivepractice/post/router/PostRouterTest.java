@@ -188,4 +188,16 @@ class PostRouterTest {
                 .exchange()
                 .expectStatus().isUnauthorized();
     }
+
+    @Test
+    @DisplayName("게시글 목록 조회")
+    void findAll(){
+        webTestClient
+                .get().uri("/posts")
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(PostResponse.class)
+                .hasSize(2);
+    }
 }

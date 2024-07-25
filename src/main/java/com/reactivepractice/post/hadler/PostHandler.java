@@ -40,4 +40,9 @@ public class PostHandler {
                         .flatMap(postService::getPost)
                         .flatMap(post -> ServerResponse.ok().body(BodyInserters.fromValue(PostResponse.from(post)))));
     }
+
+    public Mono<ServerResponse> getAllPosts(ServerRequest request) {
+        return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
+                .body(postService.getAllPosts().map(PostResponse::from), PostResponse.class);
+    }
 }

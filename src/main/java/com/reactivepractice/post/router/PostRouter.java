@@ -25,6 +25,7 @@ public class PostRouter {
                 .path("/posts", builder -> builder
                         .nest(accept(MediaType.APPLICATION_JSON), builder2 -> builder2
                         .POST("", postHandler::register)
+                        .GET("", postHandler::getAllPosts)
                         .GET("/{id}", postHandler::getPost))
                 )
                 .filter((request, next) -> next.handle(request)

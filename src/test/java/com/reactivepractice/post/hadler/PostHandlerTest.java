@@ -136,4 +136,23 @@ class PostHandlerTest {
                 .verify();
     }
 
+    @Test
+    @DisplayName("게시물 목록 조회")
+    void getAll() {
+        TestContainer testContainer = TestContainer.builder().build();
+        testContainer.postRepository.save(Post.builder()
+                        .title("제목")
+                        .contents("내용")
+                        .user(User.builder().id(1L).build())
+                .build());
+        MockServerRequest request = MockServerRequest.builder()
+                .build();
+        Mono<ServerResponse> register = testContainer.postHandler.getAllPosts(request);
+        StepVerifier.create(register)
+                .assertNext(response -> {
+                    assertThat(response.statusCode()).isEqualTo(HttpStatus.OK);
+                })
+                .verifyComplete();
+    }
+
 }

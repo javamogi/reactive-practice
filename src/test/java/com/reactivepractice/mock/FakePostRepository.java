@@ -41,6 +41,11 @@ public class FakePostRepository implements PostRepository {
     }
 
     @Override
+    public Flux<Post> findAll() {
+        return Flux.fromIterable(data);
+    }
+
+    @Override
     public Mono<Void> deleteALl() {
         data.clear();
         return Mono.justOrEmpty(data).then();

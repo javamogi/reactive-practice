@@ -9,5 +9,6 @@ public interface PostService {
     Mono<Post> register(PostRequest request, Long userId);
     Mono<Post> getPost(Long postId);
     Flux<Post> getAllPosts();
+    Mono<Void> delete(Long postId, Long userId);
     Mono<Post> modify(PostRequest request, Long userId);
 }

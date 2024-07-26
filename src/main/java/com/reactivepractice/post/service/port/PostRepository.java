@@ -12,5 +12,7 @@ public interface PostRepository {
 
     Flux<Post> findAll();
 
+    Mono<Void> deleteById(Long id);
+
     Mono<Void> deleteALl();
 }

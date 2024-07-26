@@ -1,6 +1,7 @@
 package com.reactivepractice.post.service;
 
 import com.reactivepractice.exception.ErrorCode;
+import com.reactivepractice.exception.ForbiddenException;
 import com.reactivepractice.exception.NotFoundException;
 import com.reactivepractice.exception.UnauthorizedException;
 import com.reactivepractice.post.doamin.Post;
@@ -55,6 +56,19 @@ public class PostServiceImpl implements PostService {
                                 .flatMap(p -> Mono.just(p.from(user)))
                 )
                 .switchIfEmpty(Mono.error(new NotFoundException(ErrorCode.NOT_FOUND_USER)));
+    }
+
+    @Override
+    public Mono<Void> delete(Long postId, Long userId) {
+        return userRepository.findById(userId)
+                .switchIfEmpty(Mono.error(new NotFoundException(ErrorCode.NOT_FOUND_USER)))
+                .flatMap(user ->
+                        postRepository.findById(postId)
+                                .switchIfEmpty(Mono.error(new NotFoundException(ErrorCode.NOT_FOUND_POST)))
+                                .filter(post -> post.matchWriter(user))
+                                .switchIfEmpty(Mono.error(new ForbiddenException()))
+                                .flatMap(post ->  postRepository.deleteById(postId))
+                );
     }
 
 }

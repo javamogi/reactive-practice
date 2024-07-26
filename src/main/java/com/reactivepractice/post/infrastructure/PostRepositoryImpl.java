@@ -40,6 +40,11 @@ public class PostRepositoryImpl implements PostRepository {
     }
 
     @Override
+    public Mono<Void> deleteById(Long id) {
+        return postReactiveRepository.deleteById(id);
+    }
+
+    @Override
     public Mono<Void> deleteALl() {
         return postReactiveRepository.deleteAll();
     }

@@ -1,5 +1,6 @@
 package com.reactivepractice.post.service;
 
+import com.reactivepractice.exception.ForbiddenException;
 import com.reactivepractice.exception.NotFoundException;
 import com.reactivepractice.exception.UnauthorizedException;
 import com.reactivepractice.mock.FakePostRepository;
@@ -165,10 +166,10 @@ class PostServiceImplTest {
         long userId = 1;
 
         //when
-        Mono<Post> register = postService.modify(request, userId);
+        Mono<Post> post = postService.modify(request, userId);
 
         //then
-        StepVerifier.create(register)
+        StepVerifier.create(post)
                 .assertNext(p -> {
                     assertThat(p.getId()).isEqualTo(1);
                     assertThat(p.getTitle()).isEqualTo("제목 수정");
@@ -189,12 +190,12 @@ class PostServiceImplTest {
         long userId = 1;
 
         //when
-        Mono<Post> register = postService.modify(request, userId);
+        Mono<Post> post = postService.modify(request, userId);
 
         //then
-        StepVerifier.create(register)
-                .expectErrorMatches(throwable -> throwable instanceof NotFoundException &&
-                        throwable.getMessage().equals("NOT_FOUND_POST"))
+        StepVerifier.create(post)
+                .expectErrorMatches(throwable -> throwable instanceof NotFoundException
+                        && throwable.getMessage().equals("NOT_FOUND_POST"))
                 .verify();
     }
 
@@ -210,12 +211,12 @@ class PostServiceImplTest {
         long userId = 2;
 
         //when
-        Mono<Post> register = postService.modify(request, userId);
+        Mono<Post> post = postService.modify(request, userId);
 
         //then
-        StepVerifier.create(register)
-                .expectErrorMatches(throwable -> throwable instanceof UnauthorizedException &&
-                        throwable.getMessage().equals("UNAUTHORIZED"))
+        StepVerifier.create(post)
+                .expectErrorMatches(throwable -> throwable instanceof UnauthorizedException
+                        && throwable.getMessage().equals("UNAUTHORIZED"))
                 .verify();
     }
 
@@ -231,12 +232,78 @@ class PostServiceImplTest {
         long userId = 99;
 
         //when
-        Mono<Post> register = postService.modify(request, userId);
+        Mono<Post> post = postService.modify(request, userId);
 
         //then
-        StepVerifier.create(register)
-                .expectErrorMatches(throwable -> throwable instanceof NotFoundException &&
-                        throwable.getMessage().equals("NOT_FOUND_USER"))
+        StepVerifier.create(post)
+                .expectErrorMatches(throwable -> throwable instanceof NotFoundException
+                        && throwable.getMessage().equals("NOT_FOUND_USER"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("게시글 삭제")
+    void delete() {
+        //given
+        long postId = 1;
+        long userId = 1;
+
+        //when
+        Mono<Void> result = postService.delete(postId, userId);
+
+        //then
+        StepVerifier.create(result)
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("게시글 삭제 실패 존재하지 않는 회원")
+    void failedDeleteWhenNotFoundUser() {
+        //given
+        long postId = 1;
+        long userId = 99;
+
+        //when
+        Mono<Void> result = postService.delete(postId, userId);
+
+        //then
+        StepVerifier.create(result)
+                .expectErrorMatches(throwable -> throwable instanceof NotFoundException
+                        && throwable.getMessage().equals("NOT_FOUND_USER"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("게시글 삭제 실패 존재하지 않는 게시글")
+    void failedDeleteWhenNotFoundPost() {
+        //given
+        long postId = 99;
+        long userId = 1;
+
+        //when
+        Mono<Void> result = postService.delete(postId, userId);
+
+        //then
+        StepVerifier.create(result)
+                .expectErrorMatches(throwable -> throwable instanceof NotFoundException
+                        && throwable.getMessage().equals("NOT_FOUND_POST"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("게시글 삭제 실패 작성자와 요청 회원 다름")
+    void failedDeleteWhenNotMatchWriter() {
+        //given
+        long postId = 1;
+        long userId = 2;
+
+        //when
+        Mono<Void> result = postService.delete(postId, userId);
+
+        //then
+        StepVerifier.create(result)
+                .expectErrorMatches(throwable -> throwable instanceof ForbiddenException
+                        && throwable.getMessage().equals("FORBIDDEN"))
                 .verify();
     }
 }

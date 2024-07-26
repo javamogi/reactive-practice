@@ -2,6 +2,7 @@ package com.reactivepractice.post.hadler;
 
 import com.reactivepractice.common.SessionUtils;
 import com.reactivepractice.exception.BadRequestException;
+import com.reactivepractice.exception.ForbiddenException;
 import com.reactivepractice.post.doamin.PostRequest;
 import com.reactivepractice.post.hadler.port.PostService;
 import com.reactivepractice.post.hadler.response.PostResponse;
@@ -53,5 +54,14 @@ public class PostHandler {
                 .flatMap(p -> ServerResponse
                         .status(HttpStatus.OK)
                         .body(BodyInserters.fromValue(PostResponse.from(p))));
+    }
+
+    public Mono<ServerResponse> delete(ServerRequest request) {
+        return SessionUtils.getLoginUser(request)
+                .flatMap(user -> Mono.just(request.pathVariable("id"))
+                        .map(Long::parseLong)
+                        .onErrorResume(NumberFormatException.class, throwable -> Mono.error(new BadRequestException()))
+                        .flatMap((id -> postService.delete(id, user.getId())))
+                .then(Mono.defer(() -> ServerResponse.noContent().build())));
     }
 }

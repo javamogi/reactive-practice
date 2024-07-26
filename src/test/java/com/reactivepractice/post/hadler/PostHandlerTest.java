@@ -1,6 +1,8 @@
 package com.reactivepractice.post.hadler;
 
 import com.reactivepractice.common.SessionUtils;
+import com.reactivepractice.exception.BadRequestException;
+import com.reactivepractice.exception.ForbiddenException;
 import com.reactivepractice.exception.NotFoundException;
 import com.reactivepractice.exception.UnauthorizedException;
 import com.reactivepractice.mock.TestContainer;
@@ -210,8 +212,8 @@ class PostHandlerTest {
         Mono<ServerResponse> register = testContainer.postHandler.modify(request);
 
         StepVerifier.create(register)
-                .expectErrorMatches(throwable -> throwable instanceof UnauthorizedException &&
-                        throwable.getMessage().equals("UNAUTHORIZED"))
+                .expectErrorMatches(throwable -> throwable instanceof UnauthorizedException
+                        && throwable.getMessage().equals("UNAUTHORIZED"))
                 .verify();
     }
 
@@ -251,8 +253,8 @@ class PostHandlerTest {
         Mono<ServerResponse> register = testContainer.postHandler.modify(request);
 
         StepVerifier.create(register)
-                .expectErrorMatches(throwable -> throwable instanceof UnauthorizedException &&
-                        throwable.getMessage().equals("UNAUTHORIZED"))
+                .expectErrorMatches(throwable -> throwable instanceof UnauthorizedException
+                        && throwable.getMessage().equals("UNAUTHORIZED"))
                 .verify();
     }
 
@@ -285,8 +287,8 @@ class PostHandlerTest {
         Mono<ServerResponse> register = testContainer.postHandler.modify(request);
 
         StepVerifier.create(register)
-                .expectErrorMatches(throwable -> throwable instanceof NotFoundException &&
-                        throwable.getMessage().equals("NOT_FOUND_USER"))
+                .expectErrorMatches(throwable -> throwable instanceof NotFoundException
+                        && throwable.getMessage().equals("NOT_FOUND_USER"))
                 .verify();
     }
 
@@ -314,8 +316,150 @@ class PostHandlerTest {
         Mono<ServerResponse> register = testContainer.postHandler.modify(request);
 
         StepVerifier.create(register)
-                .expectErrorMatches(throwable -> throwable instanceof NotFoundException &&
-                        throwable.getMessage().equals("NOT_FOUND_POST"))
+                .expectErrorMatches(throwable -> throwable instanceof NotFoundException
+                        && throwable.getMessage().equals("NOT_FOUND_POST"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("게시글 삭제")
+    void delete() {
+        TestContainer testContainer = TestContainer.builder().build();
+        User user = User.builder()
+                .id(1L)
+                .email("test@test.test")
+                .password("test")
+                .build();
+        testContainer.userRepository.save(user);
+        testContainer.postRepository.save(Post.builder()
+                .id(1L)
+                .user(user)
+                .title("제목")
+                .contents("내용")
+                .build());
+        UserResponse userResponse = UserResponse.builder()
+                .id(1L)
+                .email("test@test.test")
+                .name("테스트")
+                .build();
+        MockWebSession mockWebSession = new MockWebSession();
+        mockWebSession.getAttributes().put(SessionUtils.USER_SESSION_KEY, userResponse);
+        MockServerRequest request = MockServerRequest.builder()
+                .pathVariable("id", "1")
+                .session(mockWebSession)
+                .build();
+        Mono<ServerResponse> result = testContainer.postHandler.delete(request);
+        StepVerifier.create(result)
+                .assertNext(response -> {
+                    assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("게시글 삭제 실패 로그인 회원 없음")
+    void failedDeleteWhenNotLogin() {
+        TestContainer testContainer = TestContainer.builder().build();
+        testContainer.userRepository.save(User.builder()
+                .email("test@test.test")
+                .password("test")
+                .build());
+        MockServerRequest request = MockServerRequest.builder()
+                .pathVariable("id", "1")
+                .build();
+        Mono<ServerResponse> deleted = testContainer.postHandler.delete(request);
+        StepVerifier.create(deleted)
+                .expectError(UnauthorizedException.class)
+                .verify();
+    }
+
+    @Test
+    @DisplayName("게시글 삭제 실패 권한 없음")
+    void failedDeleteNotMatchUser() {
+        TestContainer testContainer = TestContainer.builder().build();
+        User user = User.builder()
+                .id(1L)
+                .email("test@test.test")
+                .password("test")
+                .build();
+        testContainer.userRepository.save(user);
+        User user2 = User.builder()
+                .id(2L)
+                .email("test2@test.test")
+                .password("test2")
+                .build();
+        testContainer.userRepository.save(user);
+        testContainer.postRepository.save(Post.builder()
+                .id(1L)
+                .user(user2)
+                .title("제목")
+                .contents("내용")
+                .build());
+        UserResponse userResponse = UserResponse.builder()
+                .id(1L)
+                .email("test@test.test")
+                .name("테스트")
+                .build();
+        MockWebSession mockWebSession = new MockWebSession();
+        mockWebSession.getAttributes().put(SessionUtils.USER_SESSION_KEY, userResponse);
+        MockServerRequest request = MockServerRequest.builder()
+                .pathVariable("id", "1")
+                .session(mockWebSession)
+                .build();
+        Mono<ServerResponse> deleted = testContainer.postHandler.delete(request);
+        StepVerifier.create(deleted)
+                .expectError(ForbiddenException.class)
+                .verify();
+    }
+
+    @Test
+    @DisplayName("게시글 삭제 실패 잘못된 파라미터")
+    void failedDeleteWhenBadRequest() {
+        TestContainer testContainer = TestContainer.builder().build();
+        testContainer.userRepository.save(User.builder()
+                .email("test@test.test")
+                .password("test")
+                .build());
+        UserResponse userResponse = UserResponse.builder()
+                .id(1L)
+                .email("test@test.test")
+                .name("테스트")
+                .build();
+        MockWebSession mockWebSession = new MockWebSession();
+        mockWebSession.getAttributes().put(SessionUtils.USER_SESSION_KEY, userResponse);
+        MockServerRequest request = MockServerRequest.builder()
+                .pathVariable("id", "")
+                .session(mockWebSession)
+                .build();
+        Mono<ServerResponse> result = testContainer.postHandler.delete(request);
+        StepVerifier.create(result)
+                .expectError(BadRequestException.class)
+                .verify();
+    }
+
+    @Test
+    @DisplayName("게시글 삭제 실패 존재하지 않는 게시글")
+    void failedDeleteWhenNotFoundPost() {
+        TestContainer testContainer = TestContainer.builder().build();
+        testContainer.userRepository.save(User.builder()
+                .email("test@test.test")
+                .password("test")
+                .build());
+        UserResponse userResponse = UserResponse.builder()
+                .id(1L)
+                .email("test@test.test")
+                .name("테스트")
+                .build();
+        MockWebSession mockWebSession = new MockWebSession();
+        mockWebSession.getAttributes().put(SessionUtils.USER_SESSION_KEY, userResponse);
+        MockServerRequest request = MockServerRequest.builder()
+                .pathVariable("id", "1")
+                .session(mockWebSession)
+                .build();
+        Mono<ServerResponse> result = testContainer.postHandler.delete(request);
+        StepVerifier.create(result)
+                .expectErrorMatches(throwable -> throwable instanceof NotFoundException
+                        && throwable.getMessage().equals("NOT_FOUND_POST"))
                 .verify();
     }
 

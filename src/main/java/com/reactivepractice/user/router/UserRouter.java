@@ -4,7 +4,9 @@ import com.reactivepractice.common.BCryptPasswordEncoder;
 import com.reactivepractice.common.PasswordEncoder;
 import com.reactivepractice.exception.CustomBaseException;
 import com.reactivepractice.exception.ErrorResponse;
+import com.reactivepractice.exception.handler.ExceptionHandler;
 import com.reactivepractice.user.handler.UserHandler;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,8 +20,11 @@ import reactor.core.publisher.Mono;
 import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 
 @Configuration(proxyBeanMethods = false)
+@RequiredArgsConstructor
 @Slf4j
 public class UserRouter {
+
+    private final ExceptionHandler exceptionHandler;
 
     @Bean
     public RouterFunction<ServerResponse> routeUsers(UserHandler userHandler){
@@ -37,17 +42,8 @@ public class UserRouter {
                         .GET("/{id}", userHandler::getUserById))
                 )
                 .filter((request, next) -> next.handle(request)
-                        .onErrorResume(CustomBaseException.class, this::handleGlobalException))
+                        .onErrorResume(CustomBaseException.class, exceptionHandler::handleGlobalException))
                 .build();
-    }
-
-    private Mono<ServerResponse> handleGlobalException(CustomBaseException ex) {
-        log.error("Global exception", ex);
-        ErrorResponse errorResponse = ErrorResponse.of(ex.getErrorCode());
-
-        return ServerResponse.status(ex.getErrorCode().getHttpStatus())
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(errorResponse));
     }
 
     @Bean

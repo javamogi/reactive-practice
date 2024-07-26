@@ -2,7 +2,9 @@ package com.reactivepractice.post.router;
 
 import com.reactivepractice.exception.CustomBaseException;
 import com.reactivepractice.exception.ErrorResponse;
+import com.reactivepractice.exception.handler.ExceptionHandler;
 import com.reactivepractice.post.hadler.PostHandler;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,8 +18,11 @@ import reactor.core.publisher.Mono;
 import static org.springframework.web.reactive.function.server.RequestPredicates.accept;
 
 @Configuration(proxyBeanMethods = false)
+@RequiredArgsConstructor
 @Slf4j
 public class PostRouter {
+
+    private final ExceptionHandler exceptionHandler;
 
     @Bean
     public RouterFunction<ServerResponse> routePosts(PostHandler postHandler){
@@ -30,17 +35,8 @@ public class PostRouter {
                         .GET("/{id}", postHandler::getPost))
                 )
                 .filter((request, next) -> next.handle(request)
-                        .onErrorResume(CustomBaseException.class, this::handleGlobalException))
+                        .onErrorResume(CustomBaseException.class, exceptionHandler::handleGlobalException))
                 .build();
-    }
-
-    private Mono<ServerResponse> handleGlobalException(CustomBaseException ex) {
-        log.error("Global exception", ex);
-        ErrorResponse errorResponse = ErrorResponse.of(ex.getErrorCode());
-
-        return ServerResponse.status(ex.getErrorCode().getHttpStatus())
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(errorResponse));
     }
 
 }

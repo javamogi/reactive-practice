@@ -50,4 +50,7 @@ public class Post {
                 .build();
     }
 
+    public boolean matchWriter(User user) {
+        return this.user.getId().equals(user.getId());
+    }
 }

@@ -1,6 +1,8 @@
 package com.reactivepractice.post.service;
 
+import com.reactivepractice.exception.ErrorCode;
 import com.reactivepractice.exception.NotFoundException;
+import com.reactivepractice.exception.UnauthorizedException;
 import com.reactivepractice.post.doamin.Post;
 import com.reactivepractice.post.doamin.PostRequest;
 import com.reactivepractice.post.hadler.port.PostService;
@@ -27,17 +29,32 @@ public class PostServiceImpl implements PostService {
                     postRepository.save(Post.from(request, user))
                             .flatMap(p -> Mono.just(p.from(user)))
                 )
-                .switchIfEmpty(Mono.error(new NotFoundException()));
+                .switchIfEmpty(Mono.error(new NotFoundException(ErrorCode.NOT_FOUND_USER)));
     }
 
     @Override
     public Mono<Post> getPost(Long postId) {
         return postRepository.findById(postId)
-                .switchIfEmpty(Mono.error(new NotFoundException()));
+                .switchIfEmpty(Mono.error(new NotFoundException(ErrorCode.NOT_FOUND_POST)));
     }
 
     @Override
     public Flux<Post> getAllPosts() {
         return postRepository.findAll();
     }
+
+    @Override
+    public Mono<Post> modify(PostRequest request, Long userId) {
+        return userRepository.findById(userId)
+                .flatMap(user ->
+                        postRepository.findById(request.getId())
+                                .switchIfEmpty(Mono.error(new NotFoundException(ErrorCode.NOT_FOUND_POST)))
+                                .filter(post -> post.matchWriter(user))
+                                .switchIfEmpty(Mono.error(new UnauthorizedException()))
+                                .flatMap(post ->  postRepository.save(Post.from(request, user)))
+                                .flatMap(p -> Mono.just(p.from(user)))
+                )
+                .switchIfEmpty(Mono.error(new NotFoundException(ErrorCode.NOT_FOUND_USER)));
+    }
+
 }

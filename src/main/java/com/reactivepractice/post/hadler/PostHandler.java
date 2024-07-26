@@ -45,4 +45,13 @@ public class PostHandler {
         return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
                 .body(postService.getAllPosts().map(PostResponse::from), PostResponse.class);
     }
+
+    public Mono<ServerResponse> modify(ServerRequest request) {
+        return SessionUtils.getLoginUser(request)
+                .flatMap(user -> request.bodyToMono(PostRequest.class)
+                        .flatMap(p -> postService.modify(p, user.getId())))
+                .flatMap(p -> ServerResponse
+                        .status(HttpStatus.OK)
+                        .body(BodyInserters.fromValue(PostResponse.from(p))));
+    }
 }

@@ -1,6 +1,7 @@
 package com.reactivepractice.post.service;
 
 import com.reactivepractice.exception.NotFoundException;
+import com.reactivepractice.exception.UnauthorizedException;
 import com.reactivepractice.mock.FakePostRepository;
 import com.reactivepractice.mock.FakeUserRepository;
 import com.reactivepractice.post.doamin.Post;
@@ -32,6 +33,11 @@ class PostServiceImplTest {
                 .email("test@test.test")
                 .password("test")
                 .name("테스트")
+                .build());
+        fakeUserRepository.save(User.builder()
+                .email("test2@test.test")
+                .password("test2")
+                .name("테스트2")
                 .build());
         fakePostRepository.save(Post.builder()
                         .user(User.builder().id(1L).build())
@@ -71,7 +77,7 @@ class PostServiceImplTest {
                 .title("제목2")
                 .contents("내용2")
                 .build();
-        long userId =2;
+        long userId = 99;
 
         //when
         Mono<Post> register = postService.register(request, userId);
@@ -145,5 +151,92 @@ class PostServiceImplTest {
                     assertThat(p.getUser().getEmail()).isEqualTo("test@test.test");
                     assertThat(p.getUser().getName()).isEqualTo("테스트");
                 });
+    }
+
+    @Test
+    @DisplayName("게시글 수정")
+    void modify(){
+        //given
+        PostRequest request = PostRequest.builder()
+                .id(1L)
+                .title("제목 수정")
+                .contents("내용 수정")
+                .build();
+        long userId = 1;
+
+        //when
+        Mono<Post> register = postService.modify(request, userId);
+
+        //then
+        StepVerifier.create(register)
+                .assertNext(p -> {
+                    assertThat(p.getId()).isEqualTo(1);
+                    assertThat(p.getTitle()).isEqualTo("제목 수정");
+                    assertThat(p.getContents()).isEqualTo("내용 수정");
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("게시글 수정 실패 존재하지 않는 게시글")
+    void failedModifyWhenEmptyPost(){
+        //given
+        PostRequest request = PostRequest.builder()
+                .id(2L)
+                .title("제목 수정")
+                .contents("내용 수정")
+                .build();
+        long userId = 1;
+
+        //when
+        Mono<Post> register = postService.modify(request, userId);
+
+        //then
+        StepVerifier.create(register)
+                .expectErrorMatches(throwable -> throwable instanceof NotFoundException &&
+                        throwable.getMessage().equals("NOT_FOUND_POST"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("게시글 수정 실패 작성자와 로그인 회원 정보 불일치")
+    void failedModifyWhenNotMatchWriter(){
+        //given
+        PostRequest request = PostRequest.builder()
+                .id(1L)
+                .title("제목 수정")
+                .contents("내용 수정")
+                .build();
+        long userId = 2;
+
+        //when
+        Mono<Post> register = postService.modify(request, userId);
+
+        //then
+        StepVerifier.create(register)
+                .expectErrorMatches(throwable -> throwable instanceof UnauthorizedException &&
+                        throwable.getMessage().equals("UNAUTHORIZED"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("게시글 수정 실패 존재하지 않는 회원")
+    void failedModifyWhenEmptyUser(){
+        //given
+        PostRequest request = PostRequest.builder()
+                .id(1L)
+                .title("제목 수정")
+                .contents("내용 수정")
+                .build();
+        long userId = 99;
+
+        //when
+        Mono<Post> register = postService.modify(request, userId);
+
+        //then
+        StepVerifier.create(register)
+                .expectErrorMatches(throwable -> throwable instanceof NotFoundException &&
+                        throwable.getMessage().equals("NOT_FOUND_USER"))
+                .verify();
     }
 }

@@ -1,20 +1,25 @@
 package com.reactivepractice.user.router;
 
-import com.reactivepractice.common.PasswordEncoder;
 import com.reactivepractice.exception.ErrorCode;
 import com.reactivepractice.exception.NotFoundException;
 import com.reactivepractice.exception.UnauthorizedException;
-import com.reactivepractice.user.handler.request.LoginRequest;
-import com.reactivepractice.user.domain.User;
 import com.reactivepractice.user.domain.UserRequest;
+import com.reactivepractice.user.handler.request.LoginRequest;
 import com.reactivepractice.user.handler.response.UserResponse;
-import com.reactivepractice.user.service.port.UserRepository;
-import org.junit.jupiter.api.*;
+import io.r2dbc.spi.ConnectionFactory;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.r2dbc.connection.init.ScriptUtils;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.EntityExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -24,26 +29,55 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Slf4j
 class UserRouterTest {
+
+    @Autowired
+    ConnectionFactory connectionFactory;
+
+    private void executeScriptBlocking(final Resource sqlScript) {
+        Mono.from(connectionFactory.create())
+                .flatMap(connection ->
+                        ScriptUtils.executeSqlScript(connection, sqlScript)
+                                .doFinally(signalType -> {
+                                    // Close the connection and handle potential errors
+                                    Mono.from(connection.close()).subscribe(
+                                            null,  // On success, do nothing
+                                            error -> log.error("Error closing connection: " + error.getMessage())
+                                    );
+                                })
+                )
+                .block();
+    }
+
+    @BeforeEach
+    void rollOutTestData(@Value("classpath:/sql/user-router-test-data.sql") Resource script) {
+        executeScriptBlocking(script);
+    }
+
+    @AfterEach
+    void cleanUpTestData(@Value("classpath:/sql/delete-all-data.sql") Resource script) {
+        executeScriptBlocking(script);
+    }
 
     @Autowired
     WebTestClient webTestClient;
 
-    @Autowired
-    UserRepository userRepository;
-
-    @Autowired
-    PasswordEncoder passwordEncoder;
-
-    @BeforeAll
-    static void init(@Autowired UserRepository userRepository,
-                     @Autowired PasswordEncoder passwordEncoder){
-        userRepository.save(User.builder()
-                .email("test@test.test")
-                .password(passwordEncoder.encode("test"))
-                .name("테스트")
-                .build()).subscribe();
-    }
+//    @Autowired
+//    UserRepository userRepository;
+//
+//    @Autowired
+//    PasswordEncoder passwordEncoder;
+//
+//    @BeforeAll
+//    static void init(@Autowired UserRepository userRepository,
+//                     @Autowired PasswordEncoder passwordEncoder){
+//        userRepository.save(User.builder()
+//                .email("test@test.test")
+//                .password(passwordEncoder.encode("test"))
+//                .name("테스트")
+//                .build()).subscribe();
+//    }
 
     @Test
     @DisplayName("회원 가입 성공")
@@ -378,16 +412,9 @@ class UserRouterTest {
     @DisplayName("회원 삭제")
     void delete() {
 
-        Long id = userRepository.save(User.builder()
-                .email("test10@test.test")
-                .password(passwordEncoder.encode("test10"))
-                .name("테스트10")
-                .build())
-                .map(User::getId).block();
-
         LoginRequest request = LoginRequest.builder()
-                .email("test10@test.test")
-                .password("test10")
+                .email("test@test.test")
+                .password("test")
                 .build();
 
         EntityExchangeResult<UserResponse> loginResult = webTestClient
@@ -406,7 +433,7 @@ class UserRouterTest {
         webTestClient
                 .delete().uri(uriBuilder -> uriBuilder
                         .path("/users/{id}")
-                        .build(id))
+                        .build(1))
                 .accept(MediaType.APPLICATION_JSON)
                 .cookie("SESSION", sessionId)
                 .exchange()

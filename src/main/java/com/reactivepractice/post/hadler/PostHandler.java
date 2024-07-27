@@ -28,7 +28,7 @@ public class PostHandler {
                             .flatMap(p -> postService.register(p, user.getId())))
                 .flatMap(p -> ServerResponse
                         .status(HttpStatus.CREATED)
-                        .body(BodyInserters.fromValue(PostResponse.from(p))));
+                        .body(BodyInserters.fromValue(PostResponse.fromWithWriter(p))));
     }
 
     public Mono<ServerResponse> getPost(ServerRequest request) {
@@ -37,12 +37,13 @@ public class PostHandler {
                         .map(Long::parseLong)
                         .onErrorResume(NumberFormatException.class, throwable -> Mono.error(new BadRequestException()))
                         .flatMap(postService::getPost)
-                        .flatMap(post -> ServerResponse.ok().body(BodyInserters.fromValue(PostResponse.from(post)))));
+                        .log()
+                        .flatMap(post -> ServerResponse.ok().body(BodyInserters.fromValue(PostResponse.fromWithWriter(post)))));
     }
 
     public Mono<ServerResponse> getAllPosts(ServerRequest request) {
         return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
-                .body(postService.getAllPosts().map(PostResponse::from), PostResponse.class);
+                .body(postService.getAllPosts().map(PostResponse::fromWithWriter), PostResponse.class);
     }
 
     public Mono<ServerResponse> modify(ServerRequest request) {
@@ -51,7 +52,7 @@ public class PostHandler {
                         .flatMap(p -> postService.modify(p, user.getId())))
                 .flatMap(p -> ServerResponse
                         .status(HttpStatus.OK)
-                        .body(BodyInserters.fromValue(PostResponse.from(p))));
+                        .body(BodyInserters.fromValue(PostResponse.fromWithWriter(p))));
     }
 
     public Mono<ServerResponse> delete(ServerRequest request) {

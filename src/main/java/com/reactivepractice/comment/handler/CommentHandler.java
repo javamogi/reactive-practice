@@ -4,6 +4,7 @@ import com.reactivepractice.comment.domain.CommentRequest;
 import com.reactivepractice.comment.handler.port.CommentService;
 import com.reactivepractice.comment.handler.response.CommentResponse;
 import com.reactivepractice.common.SessionUtils;
+import com.reactivepractice.exception.model.BadRequestException;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,5 +30,14 @@ public class CommentHandler {
                 .flatMap(c -> ServerResponse
                         .status(HttpStatus.CREATED)
                         .body(BodyInserters.fromValue(CommentResponse.from(c))));
+    }
+
+    public Mono<ServerResponse> getComment(ServerRequest request) {
+        return SessionUtils.getLoginUser(request)
+                .flatMap(user -> Mono.just(request.pathVariable("id"))
+                        .map(Long::parseLong)
+                        .onErrorResume(NumberFormatException.class, throwable -> Mono.error(new BadRequestException()))
+                        .flatMap(commentService::getComment)
+                        .flatMap(comment -> ServerResponse.ok().body(BodyInserters.fromValue(CommentResponse.from(comment)))));
     }
 }

@@ -1,7 +1,6 @@
 package com.reactivepractice.comment.handler.response;
 
 import com.reactivepractice.comment.domain.Comment;
-import com.reactivepractice.post.doamin.Post;
 import com.reactivepractice.post.hadler.response.PostResponse;
 import com.reactivepractice.user.handler.response.UserResponse;
 import lombok.*;
@@ -22,7 +21,15 @@ public class CommentResponse {
                 .id(comment.getId())
                 .content(comment.getContents())
                 .writer(UserResponse.of(comment.getWriter()))
-                .post(PostResponse.from(comment.getPost()))
+                .post(PostResponse.fromWithoutWriter(comment.getPost()))
+                .build();
+    }
+
+    public static CommentResponse fromWithoutPost(Comment comment) {
+        return CommentResponse.builder()
+                .id(comment.getId())
+                .content(comment.getContents())
+                .writer(UserResponse.of(comment.getWriter()))
                 .build();
     }
 

@@ -2,6 +2,7 @@ package com.reactivepractice.comment.domain;
 
 import com.reactivepractice.post.doamin.Post;
 import com.reactivepractice.user.domain.User;
+import io.r2dbc.spi.Readable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -32,6 +33,22 @@ public class Comment {
                 .writer(user)
                 .post(post)
                 .contents(comment.getContents())
+                .build();
+    }
+
+    public static Comment fromWithPost(Readable row) {
+        return Comment.builder()
+                .id((Long) row.get("id"))
+                .contents((String) row.get("contents"))
+                .writer(User.builder()
+                        .id((Long) row.get("user_id"))
+                        .email((String) row.get("email"))
+                        .name((String) row.get("name"))
+                        .build())
+                .post(Post.builder()
+                        .id((Long) row.get("post_id"))
+                        .title((String) row.get("title"))
+                        .build())
                 .build();
     }
 }

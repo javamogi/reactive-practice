@@ -3,6 +3,7 @@ package com.reactivepractice.post.hadler;
 import com.reactivepractice.common.SessionUtils;
 import com.reactivepractice.exception.BadRequestException;
 import com.reactivepractice.exception.ForbiddenException;
+import com.reactivepractice.post.doamin.Post;
 import com.reactivepractice.post.doamin.PostRequest;
 import com.reactivepractice.post.hadler.port.PostService;
 import com.reactivepractice.post.hadler.response.PostResponse;

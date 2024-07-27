@@ -9,23 +9,17 @@ import com.reactivepractice.mock.TestContainer;
 import com.reactivepractice.post.doamin.Post;
 import com.reactivepractice.post.doamin.PostRequest;
 import com.reactivepractice.user.domain.User;
-import com.reactivepractice.user.domain.UserRequest;
 import com.reactivepractice.user.handler.response.UserResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.codec.HttpMessageWriter;
 import org.springframework.mock.web.reactive.function.server.MockServerRequest;
 import org.springframework.mock.web.server.MockWebSession;
 import org.springframework.web.reactive.function.server.ServerResponse;
-import org.springframework.web.reactive.result.view.ViewResolver;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.util.List;
-
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 class PostHandlerTest {
 

@@ -1,5 +1,8 @@
 package com.reactivepractice.mock;
 
+import com.reactivepractice.comment.handler.CommentHandler;
+import com.reactivepractice.comment.service.CommentServiceImpl;
+import com.reactivepractice.comment.service.port.CommentRepository;
 import com.reactivepractice.common.PasswordEncoder;
 import com.reactivepractice.post.hadler.PostHandler;
 import com.reactivepractice.post.service.PostServiceImpl;
@@ -17,6 +20,9 @@ public class TestContainer {
 
     public final PostRepository postRepository;
     public final PostHandler postHandler;
+
+    public final CommentRepository commentRepository;
+    public final CommentHandler commentHandler;
 
     @Builder
     public TestContainer() {
@@ -36,6 +42,17 @@ public class TestContainer {
                 .build();
         this.postHandler = PostHandler.builder()
                 .postService(postService)
+                .build();
+
+        this.commentRepository = new FakeCommentRepository();
+        CommentServiceImpl commentService = CommentServiceImpl.builder()
+                .commentRepository(commentRepository)
+                .userRepository(userRepository)
+                .postRepository(postRepository)
+                .build();
+
+        this.commentHandler = CommentHandler.builder()
+                .commentService(commentService)
                 .build();
     }
 }

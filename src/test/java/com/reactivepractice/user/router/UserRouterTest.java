@@ -1,8 +1,8 @@
 package com.reactivepractice.user.router;
 
-import com.reactivepractice.exception.ErrorCode;
-import com.reactivepractice.exception.NotFoundException;
-import com.reactivepractice.exception.UnauthorizedException;
+import com.reactivepractice.exception.model.ErrorCode;
+import com.reactivepractice.exception.model.NotFoundException;
+import com.reactivepractice.exception.model.UnauthorizedException;
 import com.reactivepractice.user.domain.UserRequest;
 import com.reactivepractice.user.handler.request.LoginRequest;
 import com.reactivepractice.user.handler.response.UserResponse;

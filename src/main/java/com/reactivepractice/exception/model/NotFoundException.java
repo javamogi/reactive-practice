@@ -1,4 +1,4 @@
-package com.reactivepractice.exception;
+package com.reactivepractice.exception.model;
 
 public class NotFoundException extends CustomBaseException{
 

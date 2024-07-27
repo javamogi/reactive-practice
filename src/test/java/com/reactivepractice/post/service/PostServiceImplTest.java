@@ -1,8 +1,8 @@
 package com.reactivepractice.post.service;
 
-import com.reactivepractice.exception.ForbiddenException;
-import com.reactivepractice.exception.NotFoundException;
-import com.reactivepractice.exception.UnauthorizedException;
+import com.reactivepractice.exception.model.ForbiddenException;
+import com.reactivepractice.exception.model.NotFoundException;
+import com.reactivepractice.exception.model.UnauthorizedException;
 import com.reactivepractice.mock.FakePostRepository;
 import com.reactivepractice.mock.FakeUserRepository;
 import com.reactivepractice.post.doamin.Post;

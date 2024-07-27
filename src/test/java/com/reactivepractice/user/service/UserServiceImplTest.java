@@ -1,8 +1,8 @@
 package com.reactivepractice.user.service;
 
-import com.reactivepractice.exception.DuplicationException;
-import com.reactivepractice.exception.UnauthorizedException;
-import com.reactivepractice.exception.NotFoundException;
+import com.reactivepractice.exception.model.DuplicationException;
+import com.reactivepractice.exception.model.UnauthorizedException;
+import com.reactivepractice.exception.model.NotFoundException;
 import com.reactivepractice.mock.FakePasswordEncoder;
 import com.reactivepractice.mock.FakeUserRepository;
 import com.reactivepractice.user.handler.request.LoginRequest;

@@ -1,7 +1,7 @@
 package com.reactivepractice.user.handler;
 
 import com.reactivepractice.common.SessionUtils;
-import com.reactivepractice.exception.*;
+import com.reactivepractice.exception.model.*;
 import com.reactivepractice.mock.TestContainer;
 import com.reactivepractice.user.handler.request.LoginRequest;
 import com.reactivepractice.user.domain.User;

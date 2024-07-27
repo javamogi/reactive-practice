@@ -2,13 +2,11 @@ package com.reactivepractice.comment.service;
 
 import com.reactivepractice.comment.domain.Comment;
 import com.reactivepractice.comment.domain.CommentRequest;
-import com.reactivepractice.exception.NotFoundException;
+import com.reactivepractice.exception.model.NotFoundException;
 import com.reactivepractice.mock.FakeCommentRepository;
 import com.reactivepractice.mock.FakePostRepository;
 import com.reactivepractice.mock.FakeUserRepository;
 import com.reactivepractice.post.doamin.Post;
-import com.reactivepractice.post.doamin.PostRequest;
-import com.reactivepractice.post.service.PostServiceImpl;
 import com.reactivepractice.user.domain.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,7 +15,6 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 class CommentServiceImplTest {
 

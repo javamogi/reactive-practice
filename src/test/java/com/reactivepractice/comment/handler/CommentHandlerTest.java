@@ -2,11 +2,10 @@ package com.reactivepractice.comment.handler;
 
 import com.reactivepractice.comment.domain.CommentRequest;
 import com.reactivepractice.common.SessionUtils;
-import com.reactivepractice.exception.NotFoundException;
-import com.reactivepractice.exception.UnauthorizedException;
+import com.reactivepractice.exception.model.NotFoundException;
+import com.reactivepractice.exception.model.UnauthorizedException;
 import com.reactivepractice.mock.TestContainer;
 import com.reactivepractice.post.doamin.Post;
-import com.reactivepractice.post.doamin.PostRequest;
 import com.reactivepractice.user.domain.User;
 import com.reactivepractice.user.handler.response.UserResponse;
 import org.junit.jupiter.api.DisplayName;
@@ -19,7 +18,6 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 class CommentHandlerTest {
 

@@ -1,9 +1,9 @@
 package com.reactivepractice.post.service;
 
-import com.reactivepractice.exception.ErrorCode;
-import com.reactivepractice.exception.ForbiddenException;
-import com.reactivepractice.exception.NotFoundException;
-import com.reactivepractice.exception.UnauthorizedException;
+import com.reactivepractice.exception.model.ErrorCode;
+import com.reactivepractice.exception.model.ForbiddenException;
+import com.reactivepractice.exception.model.NotFoundException;
+import com.reactivepractice.exception.model.UnauthorizedException;
 import com.reactivepractice.post.doamin.Post;
 import com.reactivepractice.post.doamin.PostRequest;
 import com.reactivepractice.post.hadler.port.PostService;

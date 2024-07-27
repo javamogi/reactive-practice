@@ -1,4 +1,4 @@
-package com.reactivepractice.exception;
+package com.reactivepractice.exception.model;
 
 public class UnauthorizedException extends CustomBaseException{
     public UnauthorizedException(ErrorCode errorCode) {

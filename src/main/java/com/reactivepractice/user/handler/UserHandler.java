@@ -1,8 +1,8 @@
 package com.reactivepractice.user.handler;
 
 import com.reactivepractice.common.SessionUtils;
-import com.reactivepractice.exception.BadRequestException;
-import com.reactivepractice.exception.ForbiddenException;
+import com.reactivepractice.exception.model.BadRequestException;
+import com.reactivepractice.exception.model.ForbiddenException;
 import com.reactivepractice.user.domain.UserRequest;
 import com.reactivepractice.user.handler.port.UserService;
 import com.reactivepractice.user.handler.request.LoginRequest;

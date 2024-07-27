@@ -1,9 +1,9 @@
 package com.reactivepractice.user.service;
 
 import com.reactivepractice.common.PasswordEncoder;
-import com.reactivepractice.exception.DuplicationException;
-import com.reactivepractice.exception.UnauthorizedException;
-import com.reactivepractice.exception.NotFoundException;
+import com.reactivepractice.exception.model.DuplicationException;
+import com.reactivepractice.exception.model.UnauthorizedException;
+import com.reactivepractice.exception.model.NotFoundException;
 import com.reactivepractice.user.handler.request.LoginRequest;
 import com.reactivepractice.user.handler.port.UserService;
 import com.reactivepractice.user.domain.User;

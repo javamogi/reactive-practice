@@ -1,10 +1,10 @@
 package com.reactivepractice.post.hadler;
 
 import com.reactivepractice.common.SessionUtils;
-import com.reactivepractice.exception.BadRequestException;
-import com.reactivepractice.exception.ForbiddenException;
-import com.reactivepractice.exception.NotFoundException;
-import com.reactivepractice.exception.UnauthorizedException;
+import com.reactivepractice.exception.model.BadRequestException;
+import com.reactivepractice.exception.model.ForbiddenException;
+import com.reactivepractice.exception.model.NotFoundException;
+import com.reactivepractice.exception.model.UnauthorizedException;
 import com.reactivepractice.mock.TestContainer;
 import com.reactivepractice.post.doamin.Post;
 import com.reactivepractice.post.doamin.PostRequest;

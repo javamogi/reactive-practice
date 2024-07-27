@@ -2,8 +2,7 @@ package com.reactivepractice.user.router;
 
 import com.reactivepractice.common.BCryptPasswordEncoder;
 import com.reactivepractice.common.PasswordEncoder;
-import com.reactivepractice.exception.CustomBaseException;
-import com.reactivepractice.exception.ErrorResponse;
+import com.reactivepractice.exception.model.CustomBaseException;
 import com.reactivepractice.exception.handler.ExceptionHandler;
 import com.reactivepractice.user.handler.UserHandler;
 import lombok.RequiredArgsConstructor;
@@ -11,11 +10,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
-import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.RouterFunctions;
 import org.springframework.web.reactive.function.server.ServerResponse;
-import reactor.core.publisher.Mono;
 
 import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 

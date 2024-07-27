@@ -1,7 +1,7 @@
 package com.reactivepractice.exception.handler;
 
-import com.reactivepractice.exception.CustomBaseException;
-import com.reactivepractice.exception.ErrorResponse;
+import com.reactivepractice.exception.model.CustomBaseException;
+import com.reactivepractice.exception.model.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;

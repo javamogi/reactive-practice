@@ -1,13 +1,10 @@
 package com.reactivepractice.post.hadler;
 
 import com.reactivepractice.common.SessionUtils;
-import com.reactivepractice.exception.BadRequestException;
-import com.reactivepractice.exception.ForbiddenException;
-import com.reactivepractice.post.doamin.Post;
+import com.reactivepractice.exception.model.BadRequestException;
 import com.reactivepractice.post.doamin.PostRequest;
 import com.reactivepractice.post.hadler.port.PostService;
 import com.reactivepractice.post.hadler.response.PostResponse;
-import com.reactivepractice.user.handler.response.UserResponse;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

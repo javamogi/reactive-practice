@@ -1,9 +1,8 @@
 package com.reactivepractice.comment.router;
 
 import com.reactivepractice.comment.handler.CommentHandler;
-import com.reactivepractice.exception.CustomBaseException;
-import com.reactivepractice.exception.ErrorResponse;
-import com.reactivepractice.post.hadler.PostHandler;
+import com.reactivepractice.exception.model.CustomBaseException;
+import com.reactivepractice.exception.model.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

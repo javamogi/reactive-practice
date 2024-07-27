@@ -1,6 +1,6 @@
 package com.reactivepractice.common;
 
-import com.reactivepractice.exception.UnauthorizedException;
+import com.reactivepractice.exception.model.UnauthorizedException;
 import com.reactivepractice.user.handler.response.UserResponse;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import reactor.core.publisher.Mono;

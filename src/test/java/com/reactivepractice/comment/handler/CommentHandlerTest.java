@@ -1,5 +1,6 @@
 package com.reactivepractice.comment.handler;
 
+import com.reactivepractice.comment.domain.Comment;
 import com.reactivepractice.comment.domain.CommentRequest;
 import com.reactivepractice.common.SessionUtils;
 import com.reactivepractice.exception.model.NotFoundException;
@@ -155,6 +156,67 @@ class CommentHandlerTest {
         StepVerifier.create(register)
                 .expectErrorMatches(throwable -> throwable instanceof NotFoundException
                         && throwable.getMessage().equals("NOT_FOUND_USER"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("댓글 하나 조회")
+    void getComment(){
+        TestContainer testContainer = TestContainer.builder().build();
+        User user = User.builder()
+                .id(1L)
+                .email("test@test.test")
+                .password("test")
+                .build();
+        testContainer.userRepository.save(user);
+        Post post = Post.builder()
+                .id(1L)
+                .title("제목")
+                .contents("내용")
+                .user(user)
+                .build();
+        testContainer.postRepository.save(post);
+        testContainer.commentRepository.save(Comment.builder()
+                        .post(post)
+                        .writer(user)
+                        .contents("댓글 등록")
+                .build());
+
+        MockWebSession mockWebSession = new MockWebSession();
+        mockWebSession.getAttributes().put(SessionUtils.USER_SESSION_KEY, UserResponse.of(user));
+        MockServerRequest request = MockServerRequest.builder()
+                .session(mockWebSession)
+                .pathVariable("id", "1")
+                .build();
+        Mono<ServerResponse> register = testContainer.commentHandler.getComment(request);
+        StepVerifier.create(register)
+                .assertNext(response -> {
+                    assertThat(response.statusCode()).isEqualTo(HttpStatus.OK);
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 댓글")
+    void getCommentWhenEmptyComment(){
+        TestContainer testContainer = TestContainer.builder().build();
+        User user = User.builder()
+                .id(1L)
+                .email("test@test.test")
+                .password("test")
+                .build();
+        testContainer.userRepository.save(user);
+
+        MockWebSession mockWebSession = new MockWebSession();
+        mockWebSession.getAttributes().put(SessionUtils.USER_SESSION_KEY, UserResponse.of(user));
+        MockServerRequest request = MockServerRequest.builder()
+                .session(mockWebSession)
+                .pathVariable("id", "99")
+                .build();
+        Mono<ServerResponse> register = testContainer.commentHandler.getComment(request);
+        StepVerifier.create(register)
+                .expectErrorMatches(throwable -> throwable instanceof NotFoundException
+                        && throwable.getMessage().equals("NOT_FOUND_COMMENT"))
                 .verify();
     }
 }

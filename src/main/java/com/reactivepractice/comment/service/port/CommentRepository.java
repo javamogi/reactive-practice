@@ -5,5 +5,5 @@ import reactor.core.publisher.Mono;
 
 public interface CommentRepository {
     Mono<Comment> save(Comment comment);
-    Mono<Void> deleteAll();
+    Mono<Comment> findById(Long id);
 }

@@ -2,6 +2,7 @@ package com.reactivepractice.mock;
 
 import com.reactivepractice.comment.domain.Comment;
 import com.reactivepractice.comment.service.port.CommentRepository;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
@@ -33,8 +34,9 @@ public class FakeCommentRepository implements CommentRepository {
     }
 
     @Override
-    public Mono<Void> deleteAll() {
-        data.clear();
-        return Mono.justOrEmpty(data).then();
+    public Mono<Comment> findById(Long id) {
+        return Flux.fromIterable(data)
+                .filter(comment -> comment.getId().equals(id))
+                .next();
     }
 }

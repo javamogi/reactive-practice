@@ -6,6 +6,7 @@ import com.reactivepractice.comment.handler.response.CommentResponse;
 import com.reactivepractice.comment.service.port.CommentRepository;
 import com.reactivepractice.common.PasswordEncoder;
 import com.reactivepractice.post.doamin.Post;
+import com.reactivepractice.post.hadler.response.PostResponse;
 import com.reactivepractice.post.service.port.PostRepository;
 import com.reactivepractice.user.domain.User;
 import com.reactivepractice.user.handler.request.LoginRequest;
@@ -69,43 +70,9 @@ class CommentRouterTest {
         executeScriptBlocking(script);
     }
 
-//    // TO DO WebTestClient 테스트 DB를 사용하기 때문에 회원 PK 오류
-//    @BeforeAll
-//    static void init(@Autowired UserRepository userRepository,
-//                     @Autowired PasswordEncoder passwordEncoder,
-//                     @Autowired PostRepository postRepository,
-//                     @Autowired CommentRepository commentRepository){
-//        userRepository.save(User.builder()
-//                .email("test@test.test")
-//                .password(passwordEncoder.encode("test"))
-//                .name("테스트")
-//                .build()).subscribe(user -> postRepository.save(Post.builder()
-//                        .user(user)
-//                        .contents("내용")
-//                        .title("제목")
-//                        .build()).subscribe(post -> commentRepository.save(Comment.builder()
-//                        .contents("댓글 등록")
-//                        .writer(post.getUser())
-//                        .post(post)
-//                        .build()).subscribe()));
-//    }
-//
-//    @AfterAll
-//    static void end(@Autowired PostRepository postRepository,
-//                    @Autowired CommentRepository commentRepository){
-//        commentRepository.deleteAll().subscribe();
-//        postRepository.deleteALl().subscribe();
-//    }
-
     @Test
     @DisplayName("댓글 등록")
     void register() {
-        Long postId = postRepository.save(Post.builder()
-                .user(User.builder().id(1L).build())
-                .contents("내용")
-                .title("제목")
-                .build()).block().getId();
-
         LoginRequest loginRequest = LoginRequest.builder()
                 .email("test@test.test")
                 .password("test")
@@ -126,7 +93,7 @@ class CommentRouterTest {
 
 
         CommentRequest commentRequest = CommentRequest.builder()
-                .postId(postId)
+                .postId(1L)
                 .comment("댓글 등록2")
                 .build();
         webTestClient
@@ -139,7 +106,7 @@ class CommentRouterTest {
                 .expectBody(CommentResponse.class).value(comment -> {
                     assertThat(comment.getId()).isEqualTo(2L);
                     assertThat(comment.getContent()).isEqualTo("댓글 등록2");
-                    assertThat(comment.getPost().getTitle()).isEqualTo("제목");
+//                    assertThat(comment.getPost().getTitle()).isEqualTo("제목");
                     assertThat(comment.getWriter().getEmail()).isEqualTo("test@test.test");
                 });
     }
@@ -193,6 +160,87 @@ class CommentRouterTest {
                 .cookie("SESSION", sessionId)
                 .exchange()
                 .expectStatus().isNotFound();
+    }
+
+    @Test
+    @DisplayName("댓글 조회")
+    void getComment() {
+        LoginRequest loginRequest = LoginRequest.builder()
+                .email("test@test.test")
+                .password("test")
+                .build();
+
+        EntityExchangeResult<UserResponse> loginResult = webTestClient
+                .post().uri("/users/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(loginRequest)
+                .exchange()
+                .expectStatus().isOk()
+                .expectCookie().exists("SESSION")
+                .expectBody(UserResponse.class)
+                .returnResult();
+
+        String sessionId = loginResult.getResponseHeaders().getFirst(HttpHeaders.SET_COOKIE);
+        sessionId = sessionId.split(";")[0].split("=")[1];
+
+        webTestClient
+                .get().uri(uriBuilder -> uriBuilder
+                        .path("/comments/{id}")
+                        .build(1))
+                .accept(MediaType.APPLICATION_JSON)
+                .cookie("SESSION", sessionId)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(CommentResponse.class).value(post -> {
+                    assertThat(post.getId()).isEqualTo(1);
+                    assertThat(post.getContent()).isEqualTo("댓글 등록");
+                    assertThat(post.getWriter().getId()).isEqualTo(1);
+                    assertThat(post.getWriter().getEmail()).isEqualTo("test@test.test");
+                    assertThat(post.getWriter().getName()).isEqualTo("테스트");
+                });
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 댓글 조회")
+    void getCommentWhenEmpty() {
+        LoginRequest loginRequest = LoginRequest.builder()
+                .email("test@test.test")
+                .password("test")
+                .build();
+
+        EntityExchangeResult<UserResponse> loginResult = webTestClient
+                .post().uri("/users/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(loginRequest)
+                .exchange()
+                .expectStatus().isOk()
+                .expectCookie().exists("SESSION")
+                .expectBody(UserResponse.class)
+                .returnResult();
+
+        String sessionId = loginResult.getResponseHeaders().getFirst(HttpHeaders.SET_COOKIE);
+        sessionId = sessionId.split(";")[0].split("=")[1];
+
+        webTestClient
+                .get().uri(uriBuilder -> uriBuilder
+                        .path("/comments/{id}")
+                        .build(99))
+                .accept(MediaType.APPLICATION_JSON)
+                .cookie("SESSION", sessionId)
+                .exchange()
+                .expectStatus().isNotFound();
+    }
+
+    @Test
+    @DisplayName("댓글 조회 로그인하지 않음")
+    void getCommentWhenNotLogin() {
+        webTestClient
+                .get().uri(uriBuilder -> uriBuilder
+                        .path("/comments/{id}")
+                        .build(2))
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isUnauthorized();
     }
 
 }

@@ -32,4 +32,11 @@ public class CommentServiceImpl implements CommentService {
                             .switchIfEmpty(Mono.error(new NotFoundException(ErrorCode.NOT_FOUND_POST))))
                 .switchIfEmpty(Mono.error(new NotFoundException(ErrorCode.NOT_FOUND_USER)));
     }
+
+    @Override
+    public Mono<Comment> getComment(Long id) {
+        return commentRepository.findById(id)
+                .switchIfEmpty(Mono.error(new NotFoundException(ErrorCode.NOT_FOUND_COMMENT)));
+
+    }
 }

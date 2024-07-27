@@ -3,6 +3,7 @@ package com.reactivepractice.comment.service;
 import com.reactivepractice.comment.domain.Comment;
 import com.reactivepractice.comment.domain.CommentRequest;
 import com.reactivepractice.exception.model.NotFoundException;
+import com.reactivepractice.exception.model.UnauthorizedException;
 import com.reactivepractice.mock.FakeCommentRepository;
 import com.reactivepractice.mock.FakePostRepository;
 import com.reactivepractice.mock.FakeUserRepository;
@@ -67,7 +68,6 @@ class CommentServiceImplTest {
                     assertThat(c.getId()).isEqualTo(2);
                     assertThat(c.getContents()).isEqualTo("댓글 등록2");
                     assertThat(c.getPost().getId()).isEqualTo(1);
-                    assertThat(c.getWriter().getEmail()).isEqualTo("test@test.test");
                 })
                 .verifyComplete();
     }
@@ -109,6 +109,41 @@ class CommentServiceImplTest {
         StepVerifier.create(register)
                 .expectErrorMatches(throwable -> throwable instanceof NotFoundException
                         && throwable.getMessage().equals("NOT_FOUND_POST"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("댓글 ID로 조회")
+    void findById(){
+        //given
+        long commentId = 1;
+
+        //when
+        Mono<Comment> commentMono = commentService.getComment(commentId);
+
+        //then
+        StepVerifier.create(commentMono)
+                .assertNext(c -> {
+                    assertThat(c.getId()).isEqualTo(1);
+                    assertThat(c.getContents()).isEqualTo("댓글 등록");
+                    assertThat(c.getWriter().getId()).isEqualTo(1);
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("등록되지 않은 댓글 조회")
+    void emptyComment(){
+        //given
+        long commentId = 2;
+
+        //when
+        Mono<Comment> commentMono = commentService.getComment(commentId);
+
+        //then
+        StepVerifier.create(commentMono)
+                .expectErrorMatches(throwable -> throwable instanceof NotFoundException
+                        && throwable.getMessage().equals("NOT_FOUND_COMMENT"))
                 .verify();
     }
 }

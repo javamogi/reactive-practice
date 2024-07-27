@@ -3,6 +3,7 @@ package com.reactivepractice.comment.infrastructure;
 import com.reactivepractice.comment.domain.Comment;
 import com.reactivepractice.comment.service.port.CommentRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
@@ -11,6 +12,7 @@ import reactor.core.publisher.Mono;
 public class CommentRepositoryImpl implements CommentRepository {
 
     private final CommentReactiveRepository commentReactiveRepository;
+    private final DatabaseClient databaseClient;
 
     @Override
     public Mono<Comment> save(Comment comment) {
@@ -19,7 +21,15 @@ public class CommentRepositoryImpl implements CommentRepository {
     }
 
     @Override
-    public Mono<Void> deleteAll() {
-        return commentReactiveRepository.deleteAll();
+    public Mono<Comment> findById(Long id) {
+        String sql = "SELECT c.*, u.id, u.name, u.email, p.id, p.title " +
+                "FROM comments c " +
+                "JOIN users u ON c.user_id = u.id " +
+                "JOIN posts p ON c.post_id = p.id " +
+                "WHERE c.id = :id";
+        return databaseClient.sql(sql)
+                .bind("id", id)
+                .map(Comment::fromWithPost)
+                .one();
     }
 }

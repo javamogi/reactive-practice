@@ -1,14 +1,18 @@
 package com.reactivepractice.post.doamin;
 
+import com.reactivepractice.comment.domain.Comment;
 import com.reactivepractice.user.domain.User;
 import lombok.*;
 import io.r2dbc.spi.Readable;
+
+import java.util.List;
 
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @ToString
+@Setter
 public class Post {
 
     private Long id;
@@ -18,6 +22,8 @@ public class Post {
     private String title;
 
     private String contents;
+
+    private List<Comment> comments;
 
     public static Post from(PostRequest post, User user) {
         return Post.builder()

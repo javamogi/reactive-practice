@@ -1,5 +1,6 @@
 package com.reactivepractice.user.handler.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.reactivepractice.user.domain.User;
 import lombok.*;
 
@@ -8,6 +9,7 @@ import lombok.*;
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserResponse {
     private Long id;
     private String email;

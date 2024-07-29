@@ -1,5 +1,6 @@
 package com.reactivepractice.post.hadler.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.reactivepractice.comment.handler.response.CommentResponse;
 import com.reactivepractice.post.doamin.Post;
 import com.reactivepractice.user.handler.response.UserResponse;
@@ -14,6 +15,7 @@ import java.util.Objects;
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class PostResponse {
     private Long id;
     private String title;

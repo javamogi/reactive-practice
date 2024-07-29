@@ -54,10 +54,4 @@ public class FakePostRepository implements PostRepository {
             throw new NoSuchElementException();
         }
     }
-
-    @Override
-    public Mono<Void> deleteALl() {
-        data.clear();
-        return Mono.justOrEmpty(data).then();
-    }
 }

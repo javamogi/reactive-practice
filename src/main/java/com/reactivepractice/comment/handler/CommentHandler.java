@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Component
@@ -39,5 +40,16 @@ public class CommentHandler {
                         .onErrorResume(NumberFormatException.class, throwable -> Mono.error(new BadRequestException()))
                         .flatMap(commentService::getComment)
                         .flatMap(comment -> ServerResponse.ok().body(BodyInserters.fromValue(CommentResponse.from(comment)))));
+    }
+
+    public Mono<ServerResponse> getCommentsByPostId(ServerRequest request) {
+        return SessionUtils.getLoginUser(request)
+                .flatMap(user -> request.queryParam("postId")
+                        .filter(postId -> !postId.isEmpty())
+                        .map(postId -> ServerResponse.ok()
+                                        .body(commentService.getCommentList(Long.parseLong(postId))
+                                                .onErrorResume(NumberFormatException.class, throwable -> Mono.error(new BadRequestException()))
+                                                .map(CommentResponse::fromWithoutPost), CommentResponse.class))
+                        .orElseGet(() -> Mono.error(new BadRequestException())));
     }
 }

@@ -243,4 +243,38 @@ class CommentRouterTest {
                 .expectStatus().isUnauthorized();
     }
 
+    @Test
+    @DisplayName("게시글 댓글 목록 조회")
+    void getComments() {
+        LoginRequest loginRequest = LoginRequest.builder()
+                .email("test@test.test")
+                .password("test")
+                .build();
+
+        EntityExchangeResult<UserResponse> loginResult = webTestClient
+                .post().uri("/users/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(loginRequest)
+                .exchange()
+                .expectStatus().isOk()
+                .expectCookie().exists("SESSION")
+                .expectBody(UserResponse.class)
+                .returnResult();
+
+        String sessionId = loginResult.getResponseHeaders().getFirst(HttpHeaders.SET_COOKIE);
+        sessionId = sessionId.split(";")[0].split("=")[1];
+
+        webTestClient
+                .get().uri(uriBuilder -> uriBuilder
+                        .path("/comments")
+                        .queryParam("postId", 1)
+                        .build())
+                .accept(MediaType.APPLICATION_JSON)
+                .cookie("SESSION", sessionId)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(CommentResponse.class)
+                .hasSize(1);
+    }
+
 }

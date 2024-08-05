@@ -25,6 +25,7 @@ public class CommentRouter {
                 .path("/comments", builder -> builder
                         .nest(accept(MediaType.APPLICATION_JSON), builder2 -> builder2
                         .POST("", commentHandler::register)
+                        .GET("", commentHandler::getCommentsByPostId)
                         .GET("/{id}", commentHandler::getComment))
                 )
                 .filter((request, next) -> next.handle(request)

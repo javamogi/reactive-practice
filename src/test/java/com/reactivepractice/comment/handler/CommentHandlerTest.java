@@ -3,6 +3,7 @@ package com.reactivepractice.comment.handler;
 import com.reactivepractice.comment.domain.Comment;
 import com.reactivepractice.comment.domain.CommentRequest;
 import com.reactivepractice.common.SessionUtils;
+import com.reactivepractice.exception.model.BadRequestException;
 import com.reactivepractice.exception.model.NotFoundException;
 import com.reactivepractice.exception.model.UnauthorizedException;
 import com.reactivepractice.mock.TestContainer;
@@ -217,6 +218,114 @@ class CommentHandlerTest {
         StepVerifier.create(register)
                 .expectErrorMatches(throwable -> throwable instanceof NotFoundException
                         && throwable.getMessage().equals("NOT_FOUND_COMMENT"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("게시글 댓글 목록 조회")
+    void getComments(){
+        TestContainer testContainer = TestContainer.builder().build();
+        User user = User.builder()
+                .id(1L)
+                .email("test@test.test")
+                .password("test")
+                .build();
+        testContainer.userRepository.save(user);
+        Post post = Post.builder()
+                .id(1L)
+                .title("제목")
+                .contents("내용")
+                .user(user)
+                .build();
+        testContainer.postRepository.save(post);
+        testContainer.commentRepository.save(Comment.builder()
+                .post(post)
+                .writer(user)
+                .contents("댓글 등록")
+                .build());
+
+        MockWebSession mockWebSession = new MockWebSession();
+        mockWebSession.getAttributes().put(SessionUtils.USER_SESSION_KEY, UserResponse.of(user));
+        MockServerRequest request = MockServerRequest.builder()
+                .session(mockWebSession)
+                .queryParam("postId", "1")
+                .build();
+        Mono<ServerResponse> comments = testContainer.commentHandler.getCommentsByPostId(request);
+        StepVerifier.create(comments)
+                .assertNext(response -> {
+                    assertThat(response.statusCode()).isEqualTo(HttpStatus.OK);
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("게시글 댓글 목록 조회 빈 parameter")
+    void failedGetCommentsWhenEmptyParameter(){
+        TestContainer testContainer = TestContainer.builder().build();
+        User user = User.builder()
+                .id(1L)
+                .email("test@test.test")
+                .password("test")
+                .build();
+        testContainer.userRepository.save(user);
+        Post post = Post.builder()
+                .id(1L)
+                .title("제목")
+                .contents("내용")
+                .user(user)
+                .build();
+        testContainer.postRepository.save(post);
+        testContainer.commentRepository.save(Comment.builder()
+                .post(post)
+                .writer(user)
+                .contents("댓글 등록")
+                .build());
+
+        MockWebSession mockWebSession = new MockWebSession();
+        mockWebSession.getAttributes().put(SessionUtils.USER_SESSION_KEY, UserResponse.of(user));
+        MockServerRequest request = MockServerRequest.builder()
+                .session(mockWebSession)
+                .queryParam("postId", "")
+                .build();
+        Mono<ServerResponse> comments = testContainer.commentHandler.getCommentsByPostId(request);
+        StepVerifier.create(comments)
+                .expectErrorMatches(throwable -> throwable instanceof BadRequestException
+                        && throwable.getMessage().equals("BAD_REQUEST"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("게시글 댓글 목록 조회 문자열 parameter")
+    void failedGetCommentsWhenStringParameter(){
+        TestContainer testContainer = TestContainer.builder().build();
+        User user = User.builder()
+                .id(1L)
+                .email("test@test.test")
+                .password("test")
+                .build();
+        testContainer.userRepository.save(user);
+        Post post = Post.builder()
+                .id(1L)
+                .title("제목")
+                .contents("내용")
+                .user(user)
+                .build();
+        testContainer.postRepository.save(post);
+        testContainer.commentRepository.save(Comment.builder()
+                .post(post)
+                .writer(user)
+                .contents("댓글 등록")
+                .build());
+
+        MockWebSession mockWebSession = new MockWebSession();
+        mockWebSession.getAttributes().put(SessionUtils.USER_SESSION_KEY, UserResponse.of(user));
+        MockServerRequest request = MockServerRequest.builder()
+                .session(mockWebSession)
+                .queryParam("postId", "a")
+                .build();
+        Mono<ServerResponse> comments = testContainer.commentHandler.getCommentsByPostId(request);
+        StepVerifier.create(comments)
+                .expectErrorMatches(throwable -> throwable instanceof NumberFormatException)
                 .verify();
     }
 }

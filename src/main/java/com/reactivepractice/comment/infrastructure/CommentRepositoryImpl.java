@@ -5,6 +5,7 @@ import com.reactivepractice.comment.service.port.CommentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Repository
@@ -31,5 +32,17 @@ public class CommentRepositoryImpl implements CommentRepository {
                 .bind("id", id)
                 .map(Comment::fromWithPost)
                 .one();
+    }
+
+    @Override
+    public Flux<Comment> findByPostId(Long postId) {
+        String sql = "SELECT c.*, u.id, u.name, u.email " +
+                "FROM comments c " +
+                "JOIN users u ON c.user_id = u.id " +
+                "WHERE c.post_id = :postId";
+        return databaseClient.sql(sql)
+                .bind("postId", postId)
+                .map(Comment::fromWithoutPost)
+                .all();
     }
 }

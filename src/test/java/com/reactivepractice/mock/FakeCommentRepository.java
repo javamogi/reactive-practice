@@ -39,4 +39,10 @@ public class FakeCommentRepository implements CommentRepository {
                 .filter(comment -> comment.getId().equals(id))
                 .next();
     }
+
+    @Override
+    public Flux<Comment> findByPostId(Long postId) {
+        return Flux.fromIterable(data)
+                .filter(comment -> comment.getPost().getId().equals(postId));
+    }
 }

@@ -36,15 +36,16 @@ public class TestContainer {
                 .userService(userService)
                 .build();
         this.postRepository = new FakePostRepository();
+        this.commentRepository = new FakeCommentRepository();
         PostServiceImpl postService = PostServiceImpl.builder()
                 .postRepository(postRepository)
                 .userRepository(userRepository)
+                .commentRepository(commentRepository)
                 .build();
         this.postHandler = PostHandler.builder()
                 .postService(postService)
                 .build();
 
-        this.commentRepository = new FakeCommentRepository();
         CommentServiceImpl commentService = CommentServiceImpl.builder()
                 .commentRepository(commentRepository)
                 .userRepository(userRepository)

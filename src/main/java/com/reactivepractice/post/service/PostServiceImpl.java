@@ -1,5 +1,6 @@
 package com.reactivepractice.post.service;
 
+import com.reactivepractice.comment.service.port.CommentRepository;
 import com.reactivepractice.exception.model.ErrorCode;
 import com.reactivepractice.exception.model.ForbiddenException;
 import com.reactivepractice.exception.model.NotFoundException;
@@ -22,6 +23,7 @@ public class PostServiceImpl implements PostService {
 
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final CommentRepository commentRepository;
 
     @Override
     public Mono<Post> register(PostRequest request, Long userId) {
@@ -36,6 +38,11 @@ public class PostServiceImpl implements PostService {
     @Override
     public Mono<Post> getPost(Long postId) {
         return postRepository.findById(postId)
+                .flatMap(p ->
+                        commentRepository.findByPostId(p.getId())
+                                .collectList()
+                                .log()
+                                .map(p::from))
                 .switchIfEmpty(Mono.error(new NotFoundException(ErrorCode.NOT_FOUND_POST)));
     }
 

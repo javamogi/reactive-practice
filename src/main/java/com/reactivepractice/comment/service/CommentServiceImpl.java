@@ -11,6 +11,7 @@ import com.reactivepractice.user.service.port.UserRepository;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -38,5 +39,10 @@ public class CommentServiceImpl implements CommentService {
         return commentRepository.findById(id)
                 .switchIfEmpty(Mono.error(new NotFoundException(ErrorCode.NOT_FOUND_COMMENT)));
 
+    }
+
+    @Override
+    public Flux<Comment> getCommentList(Long postId) {
+        return commentRepository.findByPostId(postId);
     }
 }

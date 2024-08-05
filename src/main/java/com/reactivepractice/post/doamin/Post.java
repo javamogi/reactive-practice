@@ -4,6 +4,7 @@ import com.reactivepractice.comment.domain.Comment;
 import com.reactivepractice.user.domain.User;
 import lombok.*;
 import io.r2dbc.spi.Readable;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 
@@ -58,5 +59,15 @@ public class Post {
 
     public boolean matchWriter(User user) {
         return this.user.getId().equals(user.getId());
+    }
+
+    public Post from(List<Comment> commentList){
+        return Post.builder()
+                .id(id)
+                .user(user)
+                .title(title)
+                .contents(contents)
+                .comments(commentList)
+                .build();
     }
 }

@@ -12,6 +12,7 @@ import com.reactivepractice.user.domain.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -145,5 +146,26 @@ class CommentServiceImplTest {
                 .expectErrorMatches(throwable -> throwable instanceof NotFoundException
                         && throwable.getMessage().equals("NOT_FOUND_COMMENT"))
                 .verify();
+    }
+
+    @Test
+    @DisplayName("게시글 댓글 목록 조회")
+    void getList(){
+        //given
+        long postId = 1;
+
+        //when
+        Flux<Comment> commentList = commentService.getCommentList(postId);
+
+        //then
+        StepVerifier.create(commentList)
+//                .expectNextCount(1)
+                .assertNext(c -> {
+                    assertThat(c.getId()).isEqualTo(1);
+                    assertThat(c.getContents()).isEqualTo("댓글 등록");
+                    assertThat(c.getPost().getId()).isEqualTo(1);
+                    assertThat(c.getWriter().getId()).isEqualTo(1);
+                })
+                .verifyComplete();
     }
 }

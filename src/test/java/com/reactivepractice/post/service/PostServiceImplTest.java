@@ -3,6 +3,7 @@ package com.reactivepractice.post.service;
 import com.reactivepractice.exception.model.ForbiddenException;
 import com.reactivepractice.exception.model.NotFoundException;
 import com.reactivepractice.exception.model.UnauthorizedException;
+import com.reactivepractice.mock.FakeCommentRepository;
 import com.reactivepractice.mock.FakePostRepository;
 import com.reactivepractice.mock.FakeUserRepository;
 import com.reactivepractice.post.doamin.Post;
@@ -25,9 +26,11 @@ class PostServiceImplTest {
     void init() {
         FakePostRepository fakePostRepository = new FakePostRepository();
         FakeUserRepository fakeUserRepository = new FakeUserRepository();
+        FakeCommentRepository fakeCommentRepository  = new FakeCommentRepository();
         this.postService = PostServiceImpl.builder()
                 .postRepository(fakePostRepository)
                 .userRepository(fakeUserRepository)
+                .commentRepository(fakeCommentRepository)
                 .build();
 
         fakeUserRepository.save(User.builder()

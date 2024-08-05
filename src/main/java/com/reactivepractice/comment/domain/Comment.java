@@ -51,4 +51,17 @@ public class Comment {
                         .build())
                 .build();
     }
+
+    public static Comment fromWithoutPost(Readable row) {
+        return Comment.builder()
+                .id((Long) row.get("id"))
+                .contents((String) row.get("contents"))
+                .writer(User.builder()
+                        .id((Long) row.get("user_id"))
+                        .email((String) row.get("email"))
+                        .name((String) row.get("name"))
+                        .build())
+                .build();
+    }
+
 }

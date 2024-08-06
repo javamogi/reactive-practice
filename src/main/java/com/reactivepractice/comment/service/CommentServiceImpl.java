@@ -6,6 +6,9 @@ import com.reactivepractice.comment.handler.port.CommentService;
 import com.reactivepractice.comment.service.port.CommentRepository;
 import com.reactivepractice.exception.model.ErrorCode;
 import com.reactivepractice.exception.model.NotFoundException;
+import com.reactivepractice.exception.model.UnauthorizedException;
+import com.reactivepractice.post.doamin.Post;
+import com.reactivepractice.post.doamin.PostRequest;
 import com.reactivepractice.post.service.port.PostRepository;
 import com.reactivepractice.user.service.port.UserRepository;
 import lombok.Builder;
@@ -44,5 +47,18 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public Flux<Comment> getCommentList(Long postId) {
         return commentRepository.findByPostId(postId);
+    }
+
+    public Mono<Comment> modify(CommentRequest request, Long userId) {
+        return userRepository.findById(userId)
+                .flatMap(user ->
+                        commentRepository.findById(request.getId())
+                                .switchIfEmpty(Mono.error(new NotFoundException(ErrorCode.NOT_FOUND_COMMENT)))
+                                .filter(comment -> comment.matchWriter(user))
+                                .switchIfEmpty(Mono.error(new UnauthorizedException()))
+                                .flatMap(comment ->  commentRepository.save(comment.from(request)))
+                                .flatMap(c -> Mono.just(c.from(user)))
+                )
+                .switchIfEmpty(Mono.error(new NotFoundException(ErrorCode.NOT_FOUND_USER)));
     }
 }

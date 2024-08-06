@@ -6,6 +6,7 @@ import com.reactivepractice.comment.handler.response.CommentResponse;
 import com.reactivepractice.comment.service.port.CommentRepository;
 import com.reactivepractice.common.PasswordEncoder;
 import com.reactivepractice.post.doamin.Post;
+import com.reactivepractice.post.doamin.PostRequest;
 import com.reactivepractice.post.hadler.response.PostResponse;
 import com.reactivepractice.post.service.port.PostRepository;
 import com.reactivepractice.user.domain.User;
@@ -275,6 +276,94 @@ class CommentRouterTest {
                 .expectStatus().isOk()
                 .expectBodyList(CommentResponse.class)
                 .hasSize(1);
+    }
+
+    @Test
+    @DisplayName("댓글 수정")
+    void modify() {
+        LoginRequest loginRequest = LoginRequest.builder()
+                .email("test@test.test")
+                .password("test")
+                .build();
+
+        EntityExchangeResult<UserResponse> loginResult = webTestClient
+                .post().uri("/users/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(loginRequest)
+                .exchange()
+                .expectStatus().isOk()
+                .expectCookie().exists("SESSION")
+                .expectBody(UserResponse.class)
+                .returnResult();
+
+        String sessionId = loginResult.getResponseHeaders().getFirst(HttpHeaders.SET_COOKIE);
+        sessionId = sessionId.split(";")[0].split("=")[1];
+
+
+        CommentRequest commentRequest = CommentRequest.builder()
+                .id(1L)
+                .comment("댓글 수정")
+                .build();
+        webTestClient
+                .patch().uri("/comments")
+                .accept(MediaType.APPLICATION_JSON)
+                .bodyValue(commentRequest)
+                .cookie("SESSION", sessionId)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(PostResponse.class).value(post -> {
+                    assertThat(post.getId()).isEqualTo(1);
+                    assertThat(post.getContent()).isEqualTo("댓글 수정");
+                });
+    }
+
+    @Test
+    @DisplayName("댓글 수정 실패 로그인 회원 없음")
+    void failedModifyWhenNotLogin() {
+        CommentRequest commentRequest = CommentRequest.builder()
+                .id(1L)
+                .comment("댓글 수정")
+                .build();
+        webTestClient
+                .patch().uri("/comments")
+                .accept(MediaType.APPLICATION_JSON)
+                .bodyValue(commentRequest)
+                .exchange()
+                .expectStatus().isUnauthorized();
+    }
+
+    @Test
+    @DisplayName("댓글 수정 실패 존재하지 않는 게시글")
+    void failedModify() {
+        LoginRequest loginRequest = LoginRequest.builder()
+                .email("test@test.test")
+                .password("test")
+                .build();
+
+        EntityExchangeResult<UserResponse> loginResult = webTestClient
+                .post().uri("/users/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(loginRequest)
+                .exchange()
+                .expectStatus().isOk()
+                .expectCookie().exists("SESSION")
+                .expectBody(UserResponse.class)
+                .returnResult();
+
+        String sessionId = loginResult.getResponseHeaders().getFirst(HttpHeaders.SET_COOKIE);
+        sessionId = sessionId.split(";")[0].split("=")[1];
+
+        CommentRequest commentRequest = CommentRequest.builder()
+                .id(99L)
+                .comment("댓글 수정")
+                .build();
+        webTestClient
+                .patch().uri("/comments")
+                .accept(MediaType.APPLICATION_JSON)
+                .header("SESSION", sessionId)
+                .bodyValue(commentRequest)
+                .exchange()
+                .expectStatus().isUnauthorized();
     }
 
 }

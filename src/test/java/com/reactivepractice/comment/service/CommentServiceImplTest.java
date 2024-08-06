@@ -8,6 +8,7 @@ import com.reactivepractice.mock.FakeCommentRepository;
 import com.reactivepractice.mock.FakePostRepository;
 import com.reactivepractice.mock.FakeUserRepository;
 import com.reactivepractice.post.doamin.Post;
+import com.reactivepractice.post.doamin.PostRequest;
 import com.reactivepractice.user.domain.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -37,6 +38,11 @@ class CommentServiceImplTest {
                 .email("test@test.test")
                 .password("test")
                 .name("테스트")
+                .build());
+        fakeUserRepository.save(User.builder()
+                .email("test2@test.test")
+                .password("test2")
+                .name("테스트2")
                 .build());
         fakePostRepository.save(Post.builder()
                 .user(User.builder().id(1L).build())
@@ -81,7 +87,7 @@ class CommentServiceImplTest {
                 .postId(1L)
                 .comment("댓글 등록2")
                 .build();
-        long userId = 2;
+        long userId = 99;
 
         //when
         Mono<Comment> register = commentService.register(request, userId);
@@ -167,5 +173,87 @@ class CommentServiceImplTest {
                     assertThat(c.getWriter().getId()).isEqualTo(1);
                 })
                 .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("댓글 수정")
+    void modify(){
+        //given
+        CommentRequest request = CommentRequest.builder()
+                .id(1L)
+                .comment("댓글 수정")
+                .build();
+        long userId = 1;
+
+        //when
+        Mono<Comment> commentMono = commentService.modify(request, userId);
+
+        //then
+        StepVerifier.create(commentMono)
+                .assertNext(p -> {
+                    assertThat(p.getId()).isEqualTo(1);
+                    assertThat(p.getContents()).isEqualTo("댓글 수정");
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("댓글 수정 실패 존재하지 않는 댓글")
+    void failedModifyWhenEmptyComment(){
+        //given
+        CommentRequest request = CommentRequest.builder()
+                .id(2L)
+                .comment("댓글 수정")
+                .build();
+        long userId = 1;
+
+        //when
+        Mono<Comment> commentMono = commentService.modify(request, userId);
+
+        //then
+        StepVerifier.create(commentMono)
+                .expectErrorMatches(throwable -> throwable instanceof NotFoundException
+                        && throwable.getMessage().equals("NOT_FOUND_COMMENT"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("댓글 수정 실패 작성자와 로그인 회원 정보 불일치")
+    void failedModifyWhenNotMatchWriter(){
+        //given
+        CommentRequest request = CommentRequest.builder()
+                .id(1L)
+                .comment("댓글 수정")
+                .build();
+        long userId = 2;
+
+        //when
+        Mono<Comment> commentMono = commentService.modify(request, userId);
+
+        //then
+        StepVerifier.create(commentMono)
+                .expectErrorMatches(throwable -> throwable instanceof UnauthorizedException
+                        && throwable.getMessage().equals("UNAUTHORIZED"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("댓글 수정 실패 존재하지 않는 회원")
+    void failedModifyWhenEmptyUser(){
+        //given
+        CommentRequest request = CommentRequest.builder()
+                .id(1L)
+                .comment("댓글 수정")
+                .build();
+        long userId = 99;
+
+        //when
+        Mono<Comment> commentMono = commentService.modify(request, userId);
+
+        //then
+        StepVerifier.create(commentMono)
+                .expectErrorMatches(throwable -> throwable instanceof NotFoundException
+                        && throwable.getMessage().equals("NOT_FOUND_USER"))
+                .verify();
     }
 }

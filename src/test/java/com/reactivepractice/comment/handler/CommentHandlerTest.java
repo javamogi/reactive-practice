@@ -8,6 +8,7 @@ import com.reactivepractice.exception.model.NotFoundException;
 import com.reactivepractice.exception.model.UnauthorizedException;
 import com.reactivepractice.mock.TestContainer;
 import com.reactivepractice.post.doamin.Post;
+import com.reactivepractice.post.doamin.PostRequest;
 import com.reactivepractice.user.domain.User;
 import com.reactivepractice.user.handler.response.UserResponse;
 import org.junit.jupiter.api.DisplayName;
@@ -326,6 +327,187 @@ class CommentHandlerTest {
         Mono<ServerResponse> comments = testContainer.commentHandler.getCommentsByPostId(request);
         StepVerifier.create(comments)
                 .expectErrorMatches(throwable -> throwable instanceof NumberFormatException)
+                .verify();
+    }
+
+    @Test
+    @DisplayName("댓글 수정")
+    void modify(){
+        TestContainer testContainer = TestContainer.builder().build();
+        User user = User.builder()
+                .id(1L)
+                .email("test@test.test")
+                .password("test")
+                .build();
+        testContainer.userRepository.save(user);
+        Post post = Post.builder()
+                .id(1L)
+                .user(user)
+                .title("제목")
+                .contents("내용")
+                .build();
+        testContainer.postRepository.save(post);
+        testContainer.commentRepository.save(Comment.builder()
+                .id(1L)
+                .post(post)
+                .writer(user)
+                .contents("댓글 등록")
+                .build());
+
+        CommentRequest comment = CommentRequest.builder()
+                .id(1L)
+                .comment("댓글 수정")
+                .build();
+
+        MockWebSession mockWebSession = new MockWebSession();
+        mockWebSession.getAttributes().put(SessionUtils.USER_SESSION_KEY, UserResponse.of(user));
+        MockServerRequest request = MockServerRequest.builder()
+                .session(mockWebSession)
+                .body(Mono.just(comment));
+
+        Mono<ServerResponse> register = testContainer.commentHandler.modify(request);
+
+        StepVerifier.create(register)
+                .assertNext(response -> {
+                    assertThat(response.statusCode()).isEqualTo(HttpStatus.OK);
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("로그인하지 않은 회원은 댓글을 수정할 수 없다.")
+    void failedModifyWhenNotLogin(){
+        TestContainer testContainer = TestContainer.builder().build();
+        CommentRequest comment = CommentRequest.builder()
+                .id(1L)
+                .comment("댓글 수정")
+                .build();
+        MockServerRequest request = MockServerRequest.builder()
+                .body(Mono.just(comment));
+
+        Mono<ServerResponse> register = testContainer.commentHandler.modify(request);
+
+        StepVerifier.create(register)
+                .expectErrorMatches(throwable -> throwable instanceof UnauthorizedException
+                        && throwable.getMessage().equals("UNAUTHORIZED"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("작성자가 다르면 댓글을 수정할 수 없다.")
+    void failedModifyWhenNotMatchWriter(){
+        TestContainer testContainer = TestContainer.builder().build();
+        User user = User.builder()
+                .id(1L)
+                .email("test@test.test")
+                .password("test")
+                .build();
+        testContainer.userRepository.save(user);
+        User user2 = User.builder()
+                .id(2L)
+                .email("test2@test.test")
+                .password("test2")
+                .build();
+        testContainer.userRepository.save(user2);
+        Post post = Post.builder()
+                .id(1L)
+                .user(user)
+                .title("제목")
+                .contents("내용")
+                .build();
+        testContainer.postRepository.save(post);
+        testContainer.commentRepository.save(Comment.builder()
+                .id(1L)
+                .post(post)
+                .writer(user)
+                .contents("댓글 등록")
+                .build());
+
+        CommentRequest comment = CommentRequest.builder()
+                .id(1L)
+                .comment("댓글 수정")
+                .build();
+
+        MockWebSession mockWebSession = new MockWebSession();
+        mockWebSession.getAttributes().put(SessionUtils.USER_SESSION_KEY, UserResponse.of(user2));
+        MockServerRequest request = MockServerRequest.builder()
+                .session(mockWebSession)
+                .body(Mono.just(comment));
+
+        Mono<ServerResponse> register = testContainer.commentHandler.modify(request);
+
+        StepVerifier.create(register)
+                .expectErrorMatches(throwable -> throwable instanceof UnauthorizedException
+                        && throwable.getMessage().equals("UNAUTHORIZED"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 회원은 댓글을 수정할 수 없다.")
+    void failedModifyWhenEmptyUser(){
+        TestContainer testContainer = TestContainer.builder().build();
+        User user = User.builder()
+                .id(1L)
+                .email("test@test.test")
+                .password("test")
+                .build();
+        Post post = Post.builder()
+                .id(1L)
+                .user(user)
+                .title("제목")
+                .contents("내용")
+                .build();
+        testContainer.postRepository.save(post);
+        testContainer.commentRepository.save(Comment.builder()
+                .id(1L)
+                .post(post)
+                .writer(user)
+                .contents("댓글 등록")
+                .build());
+
+        CommentRequest comment = CommentRequest.builder()
+                .id(1L)
+                .comment("댓글 수정")
+                .build();
+        MockWebSession mockWebSession = new MockWebSession();
+        mockWebSession.getAttributes().put(SessionUtils.USER_SESSION_KEY, UserResponse.of(user));
+        MockServerRequest request = MockServerRequest.builder()
+                .session(mockWebSession)
+                .body(Mono.just(comment));
+
+        Mono<ServerResponse> register = testContainer.commentHandler.modify(request);
+
+        StepVerifier.create(register)
+                .expectErrorMatches(throwable -> throwable instanceof NotFoundException
+                        && throwable.getMessage().equals("NOT_FOUND_USER"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 댓글을 수정할 수 없다.")
+    void failedModifyWhenEmptyPost(){
+        TestContainer testContainer = TestContainer.builder().build();
+        User user = User.builder()
+                .id(1L)
+                .email("test@test.test")
+                .password("test")
+                .build();
+        testContainer.userRepository.save(user);
+        CommentRequest comment = CommentRequest.builder()
+                .id(1L)
+                .comment("댓글 수정")
+                .build();
+        MockWebSession mockWebSession = new MockWebSession();
+        mockWebSession.getAttributes().put(SessionUtils.USER_SESSION_KEY, UserResponse.of(user));
+        MockServerRequest request = MockServerRequest.builder()
+                .session(mockWebSession)
+                .body(Mono.just(comment));
+
+        Mono<ServerResponse> register = testContainer.commentHandler.modify(request);
+
+        StepVerifier.create(register)
+                .expectErrorMatches(throwable -> throwable instanceof NotFoundException
+                        && throwable.getMessage().equals("NOT_FOUND_COMMENT"))
                 .verify();
     }
 }

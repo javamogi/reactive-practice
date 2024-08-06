@@ -248,7 +248,7 @@ class PostRouterTest {
                 .bodyValue(postRequest)
                 .cookie("SESSION", sessionId)
                 .exchange()
-                .expectStatus().isCreated()
+                .expectStatus().isOk()
                 .expectBody(PostResponse.class).value(post -> {
                     assertThat(post.getId()).isEqualTo(1);
                     assertThat(post.getTitle()).isEqualTo("제목 수정");

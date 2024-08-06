@@ -9,4 +9,5 @@ public interface CommentService {
     Mono<Comment> register(CommentRequest request, Long userId);
     Mono<Comment> getComment(Long id);
     Flux<Comment> getCommentList(Long postId);
+    Mono<Comment> modify(CommentRequest request, Long userId);
 }

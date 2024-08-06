@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Component
@@ -51,5 +50,14 @@ public class CommentHandler {
                                                 .onErrorResume(NumberFormatException.class, throwable -> Mono.error(new BadRequestException()))
                                                 .map(CommentResponse::fromWithoutPost), CommentResponse.class))
                         .orElseGet(() -> Mono.error(new BadRequestException())));
+    }
+
+    public Mono<ServerResponse> modify(ServerRequest request) {
+        return SessionUtils.getLoginUser(request)
+                .flatMap(user -> request.bodyToMono(CommentRequest.class)
+                        .flatMap(cr -> commentService.modify(cr, user.getId())))
+                .flatMap(c -> ServerResponse
+                        .status(HttpStatus.OK)
+                        .body(BodyInserters.fromValue(CommentResponse.fromWithoutPost(c))));
     }
 }

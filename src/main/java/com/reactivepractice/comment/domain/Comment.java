@@ -27,6 +27,24 @@ public class Comment {
                 .build();
     }
 
+    public Comment from(CommentRequest request) {
+        return Comment.builder()
+                .id(id)
+                .writer(writer)
+                .contents(request.getComment())
+                .post(post)
+                .build();
+    }
+
+    public Comment from(User user) {
+        return Comment.builder()
+                .id(id)
+                .writer(user)
+                .contents(contents)
+                .post(post)
+                .build();
+    }
+
     public static Comment from(Comment comment, User user, Post post) {
         return Comment.builder()
                 .id(comment.getId())
@@ -64,4 +82,7 @@ public class Comment {
                 .build();
     }
 
+    public boolean matchWriter(User user) {
+        return this.writer.getId().equals(user.getId());
+    }
 }

@@ -60,4 +60,13 @@ public class CommentHandler {
                         .status(HttpStatus.OK)
                         .body(BodyInserters.fromValue(CommentResponse.fromWithoutPost(c))));
     }
+
+    public Mono<ServerResponse> delete(ServerRequest request) {
+        return SessionUtils.getLoginUser(request)
+                .flatMap(user -> Mono.just(request.pathVariable("id"))
+                        .map(Long::parseLong)
+                        .onErrorResume(NumberFormatException.class, throwable -> Mono.error(new BadRequestException()))
+                        .flatMap((id -> commentService.delete(id, user.getId())))
+                        .then(Mono.defer(() -> ServerResponse.noContent().build())));
+    }
 }

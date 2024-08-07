@@ -45,4 +45,9 @@ public class CommentRepositoryImpl implements CommentRepository {
                 .map(Comment::fromWithoutPost)
                 .all();
     }
+
+    @Override
+    public Mono<Void> deleteById(Long id) {
+        return commentReactiveRepository.deleteById(id);
+    }
 }

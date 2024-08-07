@@ -5,6 +5,12 @@ import com.reactivepractice.comment.domain.CommentRequest;
 import com.reactivepractice.comment.handler.response.CommentResponse;
 import com.reactivepractice.comment.service.port.CommentRepository;
 import com.reactivepractice.common.PasswordEncoder;
+import com.reactivepractice.common.SessionUtils;
+import com.reactivepractice.exception.model.BadRequestException;
+import com.reactivepractice.exception.model.ForbiddenException;
+import com.reactivepractice.exception.model.NotFoundException;
+import com.reactivepractice.exception.model.UnauthorizedException;
+import com.reactivepractice.mock.TestContainer;
 import com.reactivepractice.post.doamin.Post;
 import com.reactivepractice.post.doamin.PostRequest;
 import com.reactivepractice.post.hadler.response.PostResponse;
@@ -23,11 +29,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.reactive.function.server.MockServerRequest;
+import org.springframework.mock.web.server.MockWebSession;
 import org.springframework.r2dbc.connection.init.ScriptUtils;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.EntityExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -366,4 +376,139 @@ class CommentRouterTest {
                 .expectStatus().isUnauthorized();
     }
 
+    @Test
+    @DisplayName("댓글 삭제")
+    void delete() {
+        LoginRequest loginRequest = LoginRequest.builder()
+                .email("test@test.test")
+                .password("test")
+                .build();
+
+        EntityExchangeResult<UserResponse> loginResult = webTestClient
+                .post().uri("/users/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(loginRequest)
+                .exchange()
+                .expectStatus().isOk()
+                .expectCookie().exists("SESSION")
+                .expectBody(UserResponse.class)
+                .returnResult();
+
+        String sessionId = loginResult.getResponseHeaders().getFirst(HttpHeaders.SET_COOKIE);
+        sessionId = sessionId.split(";")[0].split("=")[1];
+
+        webTestClient
+                .delete().uri(uriBuilder -> uriBuilder
+                        .path("/comments/{id}")
+                        .build(1))
+                .accept(MediaType.APPLICATION_JSON)
+                .cookie("SESSION", sessionId)
+                .exchange()
+                .expectStatus().isNoContent();
+    }
+
+    @Test
+    @DisplayName("댓글 삭제 실패 로그인 회원 없음")
+    void failedDeleteWhenNotLogin() {
+        webTestClient
+                .get().uri(uriBuilder -> uriBuilder
+                        .path("/comments/{id}")
+                        .build(1))
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isUnauthorized();
+    }
+
+    @Test
+    @DisplayName("댓글 삭제 실패 권한 없음")
+    void failedDeleteNotMatchUser() {
+        LoginRequest loginRequest = LoginRequest.builder()
+                .email("test2@test.test")
+                .password("test")
+                .build();
+
+        EntityExchangeResult<UserResponse> loginResult = webTestClient
+                .post().uri("/users/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(loginRequest)
+                .exchange()
+                .expectStatus().isOk()
+                .expectCookie().exists("SESSION")
+                .expectBody(UserResponse.class)
+                .returnResult();
+
+        String sessionId = loginResult.getResponseHeaders().getFirst(HttpHeaders.SET_COOKIE);
+        sessionId = sessionId.split(";")[0].split("=")[1];
+
+        webTestClient
+                .delete().uri(uriBuilder -> uriBuilder
+                        .path("/comments/{id}")
+                        .build(1))
+                .accept(MediaType.APPLICATION_JSON)
+                .cookie("SESSION", sessionId)
+                .exchange()
+                .expectStatus().isForbidden();
+    }
+
+    @Test
+    @DisplayName("댓글 삭제 실패 잘못된 파라미터")
+    void failedDeleteWhenBadRequest() {
+        LoginRequest loginRequest = LoginRequest.builder()
+                .email("test@test.test")
+                .password("test")
+                .build();
+
+        EntityExchangeResult<UserResponse> loginResult = webTestClient
+                .post().uri("/users/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(loginRequest)
+                .exchange()
+                .expectStatus().isOk()
+                .expectCookie().exists("SESSION")
+                .expectBody(UserResponse.class)
+                .returnResult();
+
+        String sessionId = loginResult.getResponseHeaders().getFirst(HttpHeaders.SET_COOKIE);
+        sessionId = sessionId.split(";")[0].split("=")[1];
+
+        webTestClient
+                .delete().uri(uriBuilder -> uriBuilder
+                        .path("/comments/{id}")
+                        .build("a"))
+                .accept(MediaType.APPLICATION_JSON)
+                .cookie("SESSION", sessionId)
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
+
+    @Test
+    @DisplayName("댓글 삭제 실패 존재하지 않는 댓글")
+    void failedDeleteWhenNotFoundPost() {
+        LoginRequest loginRequest = LoginRequest.builder()
+                .email("test@test.test")
+                .password("test")
+                .build();
+
+        EntityExchangeResult<UserResponse> loginResult = webTestClient
+                .post().uri("/users/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(loginRequest)
+                .exchange()
+                .expectStatus().isOk()
+                .expectCookie().exists("SESSION")
+                .expectBody(UserResponse.class)
+                .returnResult();
+
+        String sessionId = loginResult.getResponseHeaders().getFirst(HttpHeaders.SET_COOKIE);
+        sessionId = sessionId.split(";")[0].split("=")[1];
+
+        webTestClient
+                .delete().uri(uriBuilder -> uriBuilder
+                        .path("/comments/{id}")
+                        .build(99))
+                .accept(MediaType.APPLICATION_JSON)
+                .cookie("SESSION", sessionId)
+                .exchange()
+                .expectStatus().isNotFound();
+    }
 }

@@ -5,6 +5,7 @@ import com.reactivepractice.comment.domain.CommentRequest;
 import com.reactivepractice.comment.handler.port.CommentService;
 import com.reactivepractice.comment.service.port.CommentRepository;
 import com.reactivepractice.exception.model.ErrorCode;
+import com.reactivepractice.exception.model.ForbiddenException;
 import com.reactivepractice.exception.model.NotFoundException;
 import com.reactivepractice.exception.model.UnauthorizedException;
 import com.reactivepractice.post.doamin.Post;
@@ -49,6 +50,7 @@ public class CommentServiceImpl implements CommentService {
         return commentRepository.findByPostId(postId);
     }
 
+    @Override
     public Mono<Comment> modify(CommentRequest request, Long userId) {
         return userRepository.findById(userId)
                 .flatMap(user ->
@@ -60,5 +62,18 @@ public class CommentServiceImpl implements CommentService {
                                 .flatMap(c -> Mono.just(c.from(user)))
                 )
                 .switchIfEmpty(Mono.error(new NotFoundException(ErrorCode.NOT_FOUND_USER)));
+    }
+
+    @Override
+    public Mono<Void> delete(Long commentId, Long userId) {
+        return userRepository.findById(userId)
+                .switchIfEmpty(Mono.error(new NotFoundException(ErrorCode.NOT_FOUND_USER)))
+                .flatMap(user ->
+                        commentRepository.findById(commentId)
+                                .switchIfEmpty(Mono.error(new NotFoundException(ErrorCode.NOT_FOUND_COMMENT)))
+                                .filter(comment -> comment.matchWriter(user))
+                                .switchIfEmpty(Mono.error(new ForbiddenException()))
+                                .flatMap(comment ->  commentRepository.deleteById(commentId))
+                );
     }
 }

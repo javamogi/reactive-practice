@@ -8,4 +8,5 @@ public interface CommentRepository {
     Mono<Comment> save(Comment comment);
     Mono<Comment> findById(Long id);
     Flux<Comment> findByPostId(Long postId);
+    Mono<Void> deleteById(Long id);
 }

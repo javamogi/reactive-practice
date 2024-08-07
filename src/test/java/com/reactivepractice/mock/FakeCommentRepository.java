@@ -7,6 +7,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -44,5 +45,14 @@ public class FakeCommentRepository implements CommentRepository {
     public Flux<Comment> findByPostId(Long postId) {
         return Flux.fromIterable(data)
                 .filter(comment -> comment.getPost().getId().equals(postId));
+    }
+
+    @Override
+    public Mono<Void> deleteById(Long id) {
+        if(data.removeIf(c -> Objects.equals(c.getId(), id))) {
+            return Mono.empty();
+        } else {
+            throw new NoSuchElementException();
+        }
     }
 }

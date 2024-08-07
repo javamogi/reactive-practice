@@ -2,6 +2,7 @@ package com.reactivepractice.comment.service;
 
 import com.reactivepractice.comment.domain.Comment;
 import com.reactivepractice.comment.domain.CommentRequest;
+import com.reactivepractice.exception.model.ForbiddenException;
 import com.reactivepractice.exception.model.NotFoundException;
 import com.reactivepractice.exception.model.UnauthorizedException;
 import com.reactivepractice.mock.FakeCommentRepository;
@@ -254,6 +255,72 @@ class CommentServiceImplTest {
         StepVerifier.create(commentMono)
                 .expectErrorMatches(throwable -> throwable instanceof NotFoundException
                         && throwable.getMessage().equals("NOT_FOUND_USER"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("댓글 삭제")
+    void delete() {
+        //given
+        long commentId = 1;
+        long userId = 1;
+
+        //when
+        Mono<Void> result = commentService.delete(commentId, userId);
+
+        //then
+        StepVerifier.create(result)
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("댓글 삭제 실패 존재하지 않는 회원")
+    void failedDeleteWhenNotFoundUser() {
+        //given
+        long commentId = 1;
+        long userId = 99;
+
+        //when
+        Mono<Void> result = commentService.delete(commentId, userId);
+
+        //then
+        StepVerifier.create(result)
+                .expectErrorMatches(throwable -> throwable instanceof NotFoundException
+                        && throwable.getMessage().equals("NOT_FOUND_USER"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("댓글 삭제 실패 존재하지 않는 게시글")
+    void failedDeleteWhenNotFoundPost() {
+        //given
+        long commentId = 99;
+        long userId = 1;
+
+        //when
+        Mono<Void> result = commentService.delete(commentId, userId);
+
+        //then
+        StepVerifier.create(result)
+                .expectErrorMatches(throwable -> throwable instanceof NotFoundException
+                        && throwable.getMessage().equals("NOT_FOUND_COMMENT"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("댓글 삭제 실패 작성자와 요청 회원 다름")
+    void failedDeleteWhenNotMatchWriter() {
+        //given
+        long commentId = 1;
+        long userId = 2;
+
+        //when
+        Mono<Void> result = commentService.delete(commentId, userId);
+
+        //then
+        StepVerifier.create(result)
+                .expectErrorMatches(throwable -> throwable instanceof ForbiddenException
+                        && throwable.getMessage().equals("FORBIDDEN"))
                 .verify();
     }
 }

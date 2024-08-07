@@ -4,6 +4,7 @@ import com.reactivepractice.comment.domain.Comment;
 import com.reactivepractice.comment.domain.CommentRequest;
 import com.reactivepractice.common.SessionUtils;
 import com.reactivepractice.exception.model.BadRequestException;
+import com.reactivepractice.exception.model.ForbiddenException;
 import com.reactivepractice.exception.model.NotFoundException;
 import com.reactivepractice.exception.model.UnauthorizedException;
 import com.reactivepractice.mock.TestContainer;
@@ -506,6 +507,162 @@ class CommentHandlerTest {
         Mono<ServerResponse> register = testContainer.commentHandler.modify(request);
 
         StepVerifier.create(register)
+                .expectErrorMatches(throwable -> throwable instanceof NotFoundException
+                        && throwable.getMessage().equals("NOT_FOUND_COMMENT"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("댓글 삭제")
+    void delete() {
+        TestContainer testContainer = TestContainer.builder().build();
+        User user = User.builder()
+                .id(1L)
+                .email("test@test.test")
+                .password("test")
+                .build();
+        testContainer.userRepository.save(user);
+        Post post = Post.builder()
+                .id(1L)
+                .user(user)
+                .title("제목")
+                .contents("내용")
+                .build();
+        testContainer.postRepository.save(post);
+        testContainer.commentRepository.save(Comment.builder()
+                .id(1L)
+                .post(post)
+                .writer(user)
+                .contents("댓글 등록")
+                .build());
+        UserResponse userResponse = UserResponse.builder()
+                .id(1L)
+                .email("test@test.test")
+                .name("테스트")
+                .build();
+        MockWebSession mockWebSession = new MockWebSession();
+        mockWebSession.getAttributes().put(SessionUtils.USER_SESSION_KEY, userResponse);
+        MockServerRequest request = MockServerRequest.builder()
+                .pathVariable("id", "1")
+                .session(mockWebSession)
+                .build();
+        Mono<ServerResponse> result = testContainer.commentHandler.delete(request);
+        StepVerifier.create(result)
+                .assertNext(response -> {
+                    assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("댓글 삭제 실패 로그인 회원 없음")
+    void failedDeleteWhenNotLogin() {
+        TestContainer testContainer = TestContainer.builder().build();
+        testContainer.userRepository.save(User.builder()
+                .email("test@test.test")
+                .password("test")
+                .build());
+        MockServerRequest request = MockServerRequest.builder()
+                .pathVariable("id", "1")
+                .build();
+        Mono<ServerResponse> deleted = testContainer.commentHandler.delete(request);
+        StepVerifier.create(deleted)
+                .expectError(UnauthorizedException.class)
+                .verify();
+    }
+
+    @Test
+    @DisplayName("댓글 삭제 실패 권한 없음")
+    void failedDeleteNotMatchUser() {
+        TestContainer testContainer = TestContainer.builder().build();
+        User user = User.builder()
+                .id(1L)
+                .email("test@test.test")
+                .password("test")
+                .build();
+        testContainer.userRepository.save(user);
+        User user2 = User.builder()
+                .id(2L)
+                .email("test2@test.test")
+                .password("test2")
+                .build();
+        testContainer.userRepository.save(user);
+        Post post = Post.builder()
+                .id(1L)
+                .user(user)
+                .title("제목")
+                .contents("내용")
+                .build();
+        testContainer.postRepository.save(post);
+        testContainer.commentRepository.save(Comment.builder()
+                .id(1L)
+                .post(post)
+                .writer(user2)
+                .contents("댓글 등록")
+                .build());
+        UserResponse userResponse = UserResponse.builder()
+                .id(1L)
+                .email("test@test.test")
+                .name("테스트")
+                .build();
+        MockWebSession mockWebSession = new MockWebSession();
+        mockWebSession.getAttributes().put(SessionUtils.USER_SESSION_KEY, userResponse);
+        MockServerRequest request = MockServerRequest.builder()
+                .pathVariable("id", "1")
+                .session(mockWebSession)
+                .build();
+        Mono<ServerResponse> deleted = testContainer.commentHandler.delete(request);
+        StepVerifier.create(deleted)
+                .expectError(ForbiddenException.class)
+                .verify();
+    }
+
+    @Test
+    @DisplayName("댓글 삭제 실패 잘못된 파라미터")
+    void failedDeleteWhenBadRequest() {
+        TestContainer testContainer = TestContainer.builder().build();
+        testContainer.userRepository.save(User.builder()
+                .email("test@test.test")
+                .password("test")
+                .build());
+        UserResponse userResponse = UserResponse.builder()
+                .id(1L)
+                .email("test@test.test")
+                .name("테스트")
+                .build();
+        MockWebSession mockWebSession = new MockWebSession();
+        mockWebSession.getAttributes().put(SessionUtils.USER_SESSION_KEY, userResponse);
+        MockServerRequest request = MockServerRequest.builder()
+                .pathVariable("id", "")
+                .session(mockWebSession)
+                .build();
+        Mono<ServerResponse> result = testContainer.commentHandler.delete(request);
+        StepVerifier.create(result)
+                .expectError(BadRequestException.class)
+                .verify();
+    }
+
+    @Test
+    @DisplayName("댓글 삭제 실패 존재하지 않는 댓글")
+    void failedDeleteWhenNotFoundPost() {
+        TestContainer testContainer = TestContainer.builder().build();
+        testContainer.userRepository.save(User.builder()
+                .email("test@test.test")
+                .password("test")
+                .build());
+        UserResponse userResponse = UserResponse.builder()
+                .id(1L)
+                .email("test@test.test")
+                .name("테스트")
+                .build();
+        MockWebSession mockWebSession = new MockWebSession();
+        mockWebSession.getAttributes().put(SessionUtils.USER_SESSION_KEY, userResponse);
+        MockServerRequest request = MockServerRequest.builder()
+                .pathVariable("id", "1")
+                .session(mockWebSession)
+                .build();
+        Mono<ServerResponse> result = testContainer.commentHandler.delete(request);
+        StepVerifier.create(result)
                 .expectErrorMatches(throwable -> throwable instanceof NotFoundException
                         && throwable.getMessage().equals("NOT_FOUND_COMMENT"))
                 .verify();
